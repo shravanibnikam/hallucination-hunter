@@ -7,3 +7,5 @@ export interface PublicItem { position: number; totalItems: number; question: st
 export interface SessionInfo { sessionId: string; condition: Condition; totalItems: number }
 export interface Reveal { isCorrect: boolean; wasFabricated: Side | boolean; fabricatedAnswer: string; fabricatedSpan: string; explanation: string; sourceUrl: string | null; score: number; currentStreak: number }
 export interface Summary { score: number; total: number; bestStreak: number }
+
+export interface ResumeInfo extends SessionInfo { nextPosition: number | null; currentStreak: number }

@@ -37,3 +37,5 @@ h1,h2,h3,p { margin-top: 0; }h1,h2,h3 { line-height: 1.15; letter-spacing: -.045
 @keyframes appear { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 @media (prefers-reduced-motion: reduce) { *,*::before,*::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
 @media(max-width: 640px) { .site-header,main,footer { padding: 20px; }.site-header>.eyebrow { display: none; }.hero { padding: 44px 0; }.answers { grid-template-columns: 1fr; }.answer-card,.panel { padding: 22px; }.consent-copy { gap: 12px; }.reveal-bottom { align-items: stretch; flex-direction: column; }.question-block { margin-top: 28px; }.confidence-buttons { gap: 8px; } }
+.profile-actions,.single-actions { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; margin: 24px 0; }.profile-actions .button { border-color: var(--color-accent); }
+@media(max-width:640px) { .single-actions { grid-template-columns: 1fr; } }
