@@ -1,0 +1,6 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { shareScore } from "@/lib/share";
+type Props={searchParams:Promise<{score?:string;total?:string}>};
+export async function generateMetadata({searchParams}:Props):Promise<Metadata> { const score=shareScore(await searchParams);const title=score ? `I caught ${score.score}/${score.total} AI hallucinations` : "Can you catch the AI lying?";const url=new URL(process.env.APP_URL || "http://localhost:3000");const image=new URL(score ? `/share/image?score=${score.score}&total=${score.total}` : "/share/image",url).href;return {title,description:"Put your instincts to the test with Hallucination Hunter.",openGraph:{title,images:[{url:image,width:1200,height:630,alt:title}]},twitter:{card:"summary_large_image",title,images:[image]}}; }
+export default async function SharePage({searchParams}:Props) {const score=shareScore(await searchParams);return <section className="end-screen"><p className="eyebrow">Hallucination Hunter · Challenge accepted?</p><h1>{score ? "Think you can spot more?" : "Can you catch the AI lying?"}</h1>{score && <><p className="score">{score.score}<span> / {score.total}</span></p><p>AI hallucinations caught in a shared round.</p><p className="muted small">Shared scores are self-reported.</p></>}<Link className="button primary" href="/play">Play</Link></section>;}

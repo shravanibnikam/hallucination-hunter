@@ -1,0 +1,5 @@
+"use client";
+import { useEffect,useState } from "react";
+import { api } from "@/lib/client-api";
+import type { LeaderboardEntry } from "@/lib/types";
+export function Leaderboard() { const [rows,setRows]=useState<LeaderboardEntry[]|null>(null),[error,setError]=useState("");useEffect(()=>{let active=true;api<LeaderboardEntry[]>("/api/leaderboard").then(r=>{if(active)setRows(r);}).catch(e=>{if(active)setError(e.message);});return()=>{active=false;};},[]);if(error)return <p role="alert" className="error">{error}</p>;if(!rows)return <p role="status">Loading the leaderboard…</p>;if(!rows.length)return <div className="panel"><h2>The hunt is on.</h2><p>Be the first to finish a qualifying round with a nickname.</p></div>;return <div className="table-wrap"><table><caption className="sr-only">Top 20 completed rounds</caption><thead><tr><th scope="col">Rank / hunter</th><th scope="col">Score</th><th scope="col">Best streak</th></tr></thead><tbody>{rows.map((r,i)=><tr key={i}><td><span className="rank">{String(i+1).padStart(2,"0")}</span>{r.nickname}</td><td>{r.score} / {r.total}</td><td>{r.bestStreak}</td></tr>)}</tbody></table></div>; }
