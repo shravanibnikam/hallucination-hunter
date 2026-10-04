@@ -2,6 +2,8 @@
 import argparse
 import csv
 import os
+import re
+import ipaddress
 import sys
 from urllib.parse import urlsplit
 from uuid import UUID
@@ -39,6 +41,14 @@ def validate(row):
             if parsed.scheme not in {'http', 'https'} or not parsed.hostname or any(c.isspace() for c in url) or parsed.username or parsed.password:
                 raise ValueError()
             _ = parsed.port
+            hostname = parsed.hostname.encode('idna').decode('ascii').rstrip('.')
+            try:
+                ipaddress.ip_address(hostname)
+            except ValueError:
+                if len(hostname) > 253 or any(not re.fullmatch(r'[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?', part) for part in hostname.split('.')):
+                    raise ValueError()
+            if any(ord(c) < 32 or ord(c) == 127 for c in url):
+                raise ValueError()
         except ValueError:
             errors.append('source_url: must be a valid HTTP(S) URL without credentials')
     result['source_url'] = url or None

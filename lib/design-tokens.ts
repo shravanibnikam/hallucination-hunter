@@ -5,7 +5,7 @@ export const designTokens = {
   "color-panel-hover": "#232a21",
   "color-ink": "#f4f6ef",
   "color-muted": "#aeb7aa",
-  "color-line": "#65735e",
+  "color-line": "#6b7964",
   "color-accent": "#c0f46a",
   "color-accent-ink": "#17200c",
   "color-good": "#b5f28a",
@@ -26,4 +26,4 @@ export const designTokens = {
   "text-og-label": "28px",
   "text-og-score": "140px"
 } as const;
-export const themeStyles = Object.fromEntries(Object.entries(designTokens).map(([key,value]) => [`--token-${key}`,value]));
+export const themeStyles = Object.fromEntries(Object.entries(designTokens).map(([key, value]) => [`--token-${key}`, value]));

@@ -16,3 +16,46 @@ jobs:
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test
+  database-and-browser:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: hunter
+          POSTGRES_PASSWORD: local_test_password
+          POSTGRES_DB: hunter_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U hunter -d hunter_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgresql://hunter:local_test_password@localhost:5432/hunter_test
+      NEXT_TELEMETRY_DISABLED: 1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pnpm install --frozen-lockfile
+      - run: python -m pip install -r research/requirements.txt
+      - run: python -m unittest discover -s tests -p 'research_test.py'
+      - run: pnpm test:prepare
+      - run: pnpm test:integration
+      - run: python research/import_pairs.py research/data/sample_pairs.csv --dry-run
+      - run: python research/import_pairs.py research/data/sample_pairs.csv --deactivate-missing
+        env:
+          DATABASE_URL: postgresql://hunter:local_test_password@localhost:5432/hunter_test
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:e2e
+      - run: python research/export_data.py
+        env:
+          DATABASE_URL: postgresql://hunter:local_test_password@localhost:5432/hunter_test

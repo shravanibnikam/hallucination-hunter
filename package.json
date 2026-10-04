@@ -7,14 +7,15 @@
     "node": ">=24 <25"
   },
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
+    "dev": "NEXT_TELEMETRY_DISABLED=1 next dev",
+    "build": "NEXT_TELEMETRY_DISABLED=1 next build",
+    "start": "NEXT_TELEMETRY_DISABLED=1 next start",
     "lint": "eslint .",
     "typecheck": "next typegen && tsc --noEmit",
-    "test": "vitest run --exclude tests/integration/**",
+    "test": "vitest run --exclude 'tests/integration/**'",
     "test:integration": "vitest run tests/integration",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:prepare": "node scripts/prepare-test-db.mjs"
   },
   "dependencies": {
     "lucide-react": "^1.48.0",

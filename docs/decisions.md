@@ -15,3 +15,7 @@
 - Keep all app and share-image color, radius, and type tokens in lib/design-tokens.ts, exposed to Tailwind through CSS variables.
 - Shared scores are bounded but self-reported; they never fetch or identify a session. A single next/og image route varies by score and total.
 - Nicknames are optional public aliases. Raw research exports are private working files: remove aliases and coarsen timestamps before any anonymized publication. Hosting providers may process operational connection metadata outside the app's study data.
+- In-memory limits avoid IP collection entirely: 60 session creations/minute per process, 600 guess requests/minute per process, and 30/minute per session. They reset on cold starts and do not coordinate across Vercel instances; shared global budgets can affect other players. This is a basic abuse brake, not distributed bot prevention. Maps are bounded and expire during requests; no jobs or paid storage are needed.
+- Integration tests require a separate database name ending in _test and reset that database's study tables. Playwright uses the same disposable database and real random assignment, retrying session creation until each condition is covered; no production condition override exists.
+- A round without an attention check has no failed check, but does not qualify for the leaderboard: eligibility requires an actual correctly answered attention item.
+- The reveal highlights the first exact occurrence of fabricated_span. Dataset authors should use an unambiguous span when repeated wording could confuse readers.
