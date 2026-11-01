@@ -6,6 +6,9 @@ from pathlib import Path
 import sys
 
 QUERY = """
+with device_rounds as (
+ select id, (case when device_id is not null then row_number() over (partition by device_id order by created_at, id) end)::text as device_round_number
+ from sessions)
 select g.id as guess_id, g.session_item_id, g.session_id, g.pair_id,
  g.chosen_side, g.judgment, g.is_correct, g.confidence, g.response_time_ms,
  g.flagged_too_fast, g.created_at as guess_created_at, g.app_version as guess_app_version,
@@ -13,7 +16,7 @@ select g.id as guess_id, g.session_item_id, g.session_id, g.pair_id,
  s.created_at as session_created_at, s.condition, s.consent_given_at, s.age_confirmed,
  s.nickname, s.device_type, s.ai_usage_frequency, s.background, s.ai_knowledge_rating,
  s.total_items, s.completed, s.completed_at, s.final_score, s.best_streak,
- s.failed_attention_check, s.is_pilot, s.app_version as session_app_version,
+ s.failed_attention_check, s.is_pilot, s.device_id, r.device_round_number, s.app_version as session_app_version,
  i.position, i.fake_shown_on, i.shown_answer, i.served_at,
  p.question, p.category, p.answer_real, p.answer_fake, p.fabricated_span,
  p.hallucination_type, p.explanation, p.source_url, p.model_name, p.origin,
@@ -21,6 +24,7 @@ select g.id as guess_id, g.session_item_id, g.session_id, g.pair_id,
  p.created_at as pair_created_at
 from guesses g join sessions s on s.id=g.session_id
 join session_items i on i.id=g.session_item_id join pairs p on p.id=g.pair_id
+join device_rounds r on r.id=s.id
 where (%s or not s.is_pilot)
 order by g.created_at, g.id
 """

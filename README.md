@@ -51,7 +51,7 @@ A session and its entire randomized layout are written in one transaction. The i
 
 Guess writes lock the session, require that the item was served and the previous item answered, enforce the assigned condition, and compute correctness from the stored layout. A unique constraint prevents duplicate guesses even during concurrent requests. Scores, streaks, completion, and attention-check results are computed server-side. Once assigned, a pair's contents cannot be edited; deactivate it and import a revision with a new UUID.
 
-No IPs or user-agent strings enter the study tables. The random session UUID is a bearer capability stored only in `sessionStorage`; do not share it. The app sets no cookies. Rate limits are intentionally basic and per process; see [decisions](docs/decisions.md). Calibration, mean confidence, and category accuracy exclude attention checks; the game score and streaks include them.
+No IPs or user-agent strings enter the study tables. The random session UUID is a bearer capability stored only in `sessionStorage`; do not share it. A separate random device ID in `localStorage` (`hh_device_id`) marks repeat play: it is stored in `sessions.device_id`, exported for analysis, and never shown publicly. The app sets no cookies. Rate limits are intentionally basic and per process; see [decisions](docs/decisions.md). Calibration, mean confidence, and category accuracy exclude attention checks; the game score and streaks include them.
 
 ## Local setup
 
@@ -127,7 +127,7 @@ research/.venv/bin/python research/export_data.py --include-pilot
 
 Imports require stable UUIDs and validate required fields, enums, exact fabricated spans, and HTTP(S) URLs. Valid rows are upserted transactionally, invalid rows are reported with line numbers, and a nonzero status reports errors. Deactivation refuses invalid or empty files and never deletes data.
 
-Exports are timestamped CSVs in ignored `research/data/exports/`. They include incomplete sessions and quality flags (`completed`, `failed_attention_check`, `flagged_too_fast`), so exclusion choices remain explicit. Pilot guesses are excluded by default. Raw exports include optional aliases and precise timestamps: review and anonymize them before public release. The export script is data transport, not an analysis pipeline.
+Exports are timestamped CSVs in ignored `research/data/exports/`. They include incomplete sessions and quality flags (`completed`, `failed_attention_check`, `flagged_too_fast`), so exclusion choices remain explicit. `device_round_number` is 1 for a browser's first session by creation time, counting every session including pilot ones; it is empty without a `device_id`. Pilot guesses are excluded by default. Raw exports include optional aliases and precise timestamps: review and anonymize them before public release. The export script is data transport, not an analysis pipeline.
 
 ## Project structure
 

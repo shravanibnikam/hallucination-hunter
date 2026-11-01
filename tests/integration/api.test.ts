@@ -123,6 +123,20 @@ test("invalid consent, client scores, malformed IDs, and wrong-condition choices
   const other = await session();
   expect((await guess(request({ sessionId: other.sessionId, position: 1, chosenSide: "left", confidence: 2, responseTimeMs: 2000 }))).status).toBe(409);
 });
+test("device IDs are validated, stored, and never returned", async () => {
+  const deviceId = "6f1c1d5e-8a4b-4c3d-9e2f-0a1b2c3d4e5f";
+  const response = await create(request({ consent: true, ageConfirmed: true, deviceId }));
+  expect(response.status).toBe(201);
+  const s = await response.json() as SessionInfo;
+  expect(JSON.stringify(s)).not.toContain(deviceId);
+  const [stored] = await sql`select device_id from sessions where id=${s.sessionId}`;
+  expect(stored.device_id).toBe(deviceId);
+  expect(JSON.stringify(await (await resume(new Request("http://local"), context(s.sessionId))).json())).not.toContain(deviceId);
+  expect((await create(request({ consent: true, ageConfirmed: true, deviceId: "not-a-uuid" }))).status).toBe(400);
+  const anonymous = await (await create(request({ consent: true, ageConfirmed: true, deviceId: null }))).json() as SessionInfo;
+  const [none] = await sql`select device_id from sessions where id=${anonymous.sessionId}`;
+  expect(none.device_id).toBeNull();
+});
 test("timing is clamped and fast responses are flagged", async () => {
   const s = await session();
   await answer(s, 1, true, -100);

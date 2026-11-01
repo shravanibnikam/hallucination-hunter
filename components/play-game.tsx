@@ -7,6 +7,19 @@ import { Profile } from "./profile";
 import { api, ApiError } from "@/lib/client-api";
 import type { PublicItem, Reveal, SessionInfo, Side, Judgment, ResumeInfo, Summary } from "@/lib/types";
 
+/** Random repeat-play marker; null when localStorage or randomUUID is unavailable. */
+function deviceId() {
+  try {
+    let id = localStorage.getItem("hh_device_id");
+    if (!id || !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(id)) {
+      id = crypto.randomUUID();
+      localStorage.setItem("hh_device_id", id);
+    }
+    return id;
+  } catch {
+    return null;
+  }
+}
 export function PlayGame() {
   const [loading, setLoading] = useState(true);
 
@@ -53,7 +66,7 @@ export function PlayGame() {
     setBusy(true);
     setError("");
     try {
-      const s = await api<SessionInfo>("/api/sessions", { consent: true, ageConfirmed: true, ...data, pilot: new URLSearchParams(window.location.search).get("pilot") === "1", deviceType: window.innerWidth < 768 ? "mobile" : "desktop" });
+      const s = await api<SessionInfo>("/api/sessions", { consent: true, ageConfirmed: true, ...data, pilot: new URLSearchParams(window.location.search).get("pilot") === "1", deviceType: window.innerWidth < 768 ? "mobile" : "desktop", deviceId: deviceId() });
       sessionStorage.setItem("hunter-session", s.sessionId);
       setSession(s);
     } catch (e) {

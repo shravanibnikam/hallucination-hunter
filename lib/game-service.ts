@@ -71,7 +71,7 @@ export async function createSession(input: z.infer<typeof sessionSchema>) {
       throw new HttpError(503, "The study is being prepared. Please come back soon.");
     const [s] = await tx<{
       id: string;
-    }[]> `insert into sessions (condition, consent_given_at, age_confirmed, nickname, device_type, total_items, is_pilot, app_version) values (${condition}, now(), true, ${input.nickname ?? null}, ${input.deviceType ?? null}, ${round.length}, ${input.pilot ?? false}, ${version}) returning id`;
+    }[]> `insert into sessions (condition, consent_given_at, age_confirmed, nickname, device_type, device_id, total_items, is_pilot, app_version) values (${condition}, now(), true, ${input.nickname ?? null}, ${input.deviceType ?? null}, ${input.deviceId ?? null}, ${round.length}, ${input.pilot ?? false}, ${version}) returning id`;
     await tx`insert into session_items ${tx(round.map(i => ({ session_id: s.id, pair_id: i.pairId, position: i.position, fake_shown_on: i.fakeShownOn, shown_answer: i.shownAnswer })))}`;
     return { sessionId: s.id, condition, totalItems: round.length };
 
