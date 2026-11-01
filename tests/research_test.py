@@ -1,7 +1,9 @@
 """CSV validation and export-query checks; no database credentials needed."""
 import csv
 import importlib.util
+import io
 from pathlib import Path
+from types import SimpleNamespace
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -71,6 +73,26 @@ class ExportColumns(unittest.TestCase):
             with self.subTest(column=column):
                 self.assertIn(column, export.QUERY)
         self.assertIn('(%s or not s.is_pilot) and (%s or s.is_study)', export.QUERY)
+
+    def test_integer_columns_raw_csv(self):
+        int2, int4, int8, boolean, text = 21, 23, 20, 16, 25
+        description = [SimpleNamespace(name=name, type_code=oid) for name, oid in [('final_score', int2), ('best_streak', int2), ('ai_knowledge_rating', int2), ('response_time_ms', int4), ('position', int2), ('device_round_number', int8), ('is_study', boolean), ('nickname', text)]]
+        rows = [(8, 3, None, 2000, 1, 1, True, 'Hunter'), (None, None, 4, 0, 10, None, False, None), (10, 10, 5, 600000, 7, 2 ** 53 + 1, True, '8')]
+        output = io.StringIO()
+        export.write_rows(output, description, rows, True)
+        self.assertEqual(output.getvalue().splitlines(), [
+            'final_score,best_streak,ai_knowledge_rating,response_time_ms,position,device_round_number,is_study,nickname',
+            '8,3,,2000,1,1,True,Hunter',
+            ',,4,0,10,,False,',
+            '10,10,5,600000,7,9007199254740993,True,8',
+        ])
+        # A later chunk that is entirely null in a column still writes empty fields, without a header.
+        output = io.StringIO()
+        export.write_rows(output, description, rows[1:2], False)
+        self.assertEqual(output.getvalue(), ',,4,0,10,,False,\n')
+        output = io.StringIO()
+        export.write_rows(output, description, [], True)
+        self.assertEqual(output.getvalue().splitlines(), ['final_score,best_streak,ai_knowledge_rating,response_time_ms,position,device_round_number,is_study,nickname'])
 
 
 if __name__ == '__main__':

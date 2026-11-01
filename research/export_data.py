@@ -9,7 +9,7 @@ import sys
 
 QUERY = """
 with device_rounds as (
- select id, (case when device_id is not null then row_number() over (partition by device_id order by created_at, id) end)::text as device_round_number
+ select id, (case when device_id is not null then row_number() over (partition by device_id order by created_at, id) end) as device_round_number
  from sessions)
 select g.id as guess_id, g.session_item_id, g.session_id, g.pair_id,
  g.chosen_side, g.judgment, g.is_correct, g.confidence, g.response_time_ms,
@@ -30,6 +30,19 @@ join device_rounds r on r.id=s.id
 where (%s or not s.is_pilot) and (%s or s.is_study)
 order by g.created_at, g.id
 """
+# PostgreSQL's fixed type OIDs for int8, int2 and int4.
+INTEGER_OIDS = {20, 21, 23}
+
+
+def write_rows(output, description, rows, header):
+    """Write one chunk; integer columns use nullable Int64, so 8 is written as 8 (not 8.0) and NULL as empty."""
+    import pandas as pd
+    frame = pd.DataFrame.from_records(rows, columns=[column.name for column in description])
+    for index, column in enumerate(description):
+        if column.type_code in INTEGER_OIDS:
+            # Built from the raw values rather than via float, so large integers stay exact.
+            frame[column.name] = pd.array([row[index] for row in rows], dtype='Int64')
+    frame.to_csv(output, index=False, header=header)
 
 
 def main():
@@ -39,7 +52,7 @@ def main():
     args = parser.parse_args()
     if not os.environ.get('DATABASE_URL'):
         parser.error('Set DATABASE_URL before exporting')
-    import pandas as pd
+    import pandas  # noqa: F401  (fail before the export file is created)
     import psycopg
     folder = Path(__file__).resolve().parent / 'data' / 'exports'
     folder.mkdir(parents=True, exist_ok=True)
@@ -55,12 +68,11 @@ def main():
                     first = True
                     while True:
                         rows = cur.fetchmany(10000)
-                        columns = [column.name for column in cur.description]
                         if not rows:
                             if first:
-                                pd.DataFrame(columns=columns).to_csv(output, index=False)
+                                write_rows(output, cur.description, [], True)
                             break
-                        pd.DataFrame.from_records(rows, columns=columns).to_csv(output, index=False, header=first)
+                        write_rows(output, cur.description, rows, first)
                         first = False
                         total += len(rows)
     except psycopg.Error:
