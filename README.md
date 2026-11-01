@@ -37,7 +37,7 @@ Coming soon. No study findings are claimed from the development samples.
 
 [Research dataset — coming soon](#dataset). The included [sample CSV](research/data/sample_pairs.csv) has six ordinary examples and two attention checks, all prefixed `[SAMPLE]` and versioned `sample-v1`. Each row names the `real_span` its fake replaces. The demonstration round has seven items: six ordinary facts plus one randomly selected check. Replace these examples before recruitment.
 
-Dataset generation and analysis are owned by Shravani. Their folders contain only placeholder READMEs.
+Dataset generation and analysis are owned by Shravani. The v1 dataset pipeline lives in [research/dataset_generation](research/dataset_generation/README.md); the analysis folder is still a placeholder.
 
 ## Tech stack
 
@@ -98,7 +98,7 @@ Apply each migration **once**, in filename order, to a fresh database. Open `htt
 pnpm lint
 pnpm typecheck
 pnpm test
-research/.venv/bin/python -m unittest discover -s tests -p 'research_test.py'
+research/.venv/bin/python -m unittest discover -s tests -p '*_test.py'
 ```
 
 Database and browser tests require a **separate disposable database** whose name ends in `_test`. Integration tests truncate its study tables. Never point `TEST_DATABASE_URL` at research data. Example using a running local PostgreSQL instance and your configured local database role:
@@ -142,7 +142,7 @@ lib/                    Round selection, schemas, scoring, database access
   design-tokens.ts      All colors, radii, and type sizes
 supabase/migrations/    Schema, RLS, constraints, exposure view
 research/               Import/export tools and sample CSV
-  dataset_generation/   Owner's placeholder only
+  dataset_generation/   v1 dataset pipeline (see its README)
   analysis/             Owner's placeholder only
 tests/                  Unit, integration, Python validation, and browser tests
 scripts/                Disposable test database preparation
