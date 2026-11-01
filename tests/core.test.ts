@@ -2,7 +2,7 @@ import { expect, test } from "vitest";
 import { buildRound } from "@/lib/round-builder";
 import { isCorrect, scoreGuesses } from "@/lib/scoring";
 import { sessionSchema, guessSchema, nicknameSchema } from "@/lib/schemas";
-const pairs = Array.from({ length: 15 }, (_, i) => ({ id: String(i), category: "science", is_active: true, is_attention_check: false }));
+const pairs = Array.from({ length: 15 }, (_, i) => ({ id: String(i), category: "science", hallucination_type: "wrong_number", is_active: true, is_attention_check: false }));
 test("paired rounds are unique, bounded, and accommodate scarcity", () => {
   const r = buildRound(pairs, [], "paired");
   expect(r).toHaveLength(9);

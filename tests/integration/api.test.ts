@@ -42,7 +42,7 @@ async function answer(s: SessionInfo, position: number, correct = true, ms = 200
 beforeAll(async () => {
   await sql`truncate guesses,session_items,sessions,pairs`;
   for (let i = 1; i <= 14; i++)
-    await sql`insert into pairs(question,category,answer_real,answer_fake,fabricated_span,hallucination_type,explanation,origin,is_attention_check,dataset_version) values (${`[SAMPLE] Fixture ${i}: is two plus two four?`},${["science", "history", "geography"][i % 3]},'Two plus two is four.','Two plus two is five.','five','wrong_number','Two plus two is four.','synthetic',${i > 12},'test-v0')`;
+    await sql`insert into pairs(question,category,answer_real,answer_fake,fabricated_span,hallucination_type,explanation,origin,is_attention_check,dataset_version) values (${`[SAMPLE] Fixture ${i}: is two plus two four?`},${["science", "history", "geography"][i % 3]},'Two plus two is four.','Two plus two is five.','five',${["wrong_number", "wrong_entity", "wrong_date", "invented_citation"][i % 4]},'Two plus two is four.','synthetic',${i > 12},'test-v0')`;
 });
 beforeEach(async () => {
   await sql`truncate guesses,session_items,sessions`;

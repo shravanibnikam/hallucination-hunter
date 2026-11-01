@@ -4,6 +4,7 @@ export type Judgment = "yes" | "no";
 export interface PairCandidate {
   id: string;
   category: string;
+  hallucination_type: string;
   is_attention_check: boolean;
   is_active: boolean;
 }

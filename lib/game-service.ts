@@ -63,7 +63,7 @@ async function orderedGuesses(tx: TransactionSql, id: string) {
 }
 export async function createSession(input: z.infer<typeof sessionSchema>) {
   return db().begin(async (tx) => {
-    const pairs = await tx<PairCandidate[]> `select id, category, is_attention_check, is_active from pairs where is_active`;
+    const pairs = await tx<PairCandidate[]> `select id, category, hallucination_type, is_attention_check, is_active from pairs where is_active`;
     const counts = await tx<Exposure[]> `select pair_id, judgment_count from pair_exposure_counts`;
     const condition: Condition = randomInt(2) === 0 ? "paired" : "single";
     const round = buildRound(pairs, counts, condition, () => randomInt(0, 2 ** 32) / 2 ** 32);
