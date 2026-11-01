@@ -9,6 +9,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "research" / "dataset_generation"))
 import check_sources
 import common
+import make_fakes
 
 ARTICLE = {
     "parse": {
@@ -270,6 +271,216 @@ class FormatRules(unittest.TestCase):
                 self.assertEqual(
                     (row["is_attention_check"], row["dataset_version"]), ("true", "v1")
                 )
+
+
+KINDS = {
+    "Canberra": ("Q3114", {"Q515", "Q5119"}),
+    "Sydney": ("Q3130", {"Q515", "Q1637706"}),
+    "Tasmania": ("Q34366", {"Q5852411"}),
+    "Canberra, ACT": ("Q3114", {"Q515"}),
+    "Queanbeyan City": ("Q1027", {"Q515"}),
+}
+
+
+class FakeChecks(unittest.TestCase):
+    def test_numbers(self):
+        self.assertEqual(make_fakes.number_errors("1,538", "1,547"), [])
+        self.assertEqual(make_fakes.number_errors("2,300", "2,100"), [])
+        # A thousands group starting with 0 is not a leading zero.
+        self.assertEqual(make_fakes.number_errors("17,098,246", "16,098,246"), [])
+        self.assertEqual(make_fakes.number_errors("1,052", "1,067"), [])
+        self.assertEqual(make_fakes.number_errors("3-5", "3-7"), [])
+        cases = {
+            ("1,538", "1538"): "number: unit, formatting or digit count differs",
+            ("1,538", "15,380"): "number: unit, formatting or digit count differs",
+            ("146.6", "146.60"): "number: unit, formatting or digit count differs",
+            ("1,538", "1,538"): "number: same value as the real span",
+            ("54", "60"): "number: round number for a non-round real value",
+            ("54", "07"): "number: leading zero",
+        }
+        for (real, fake), error in cases.items():
+            with self.subTest(fake=fake):
+                self.assertEqual(make_fakes.number_errors(real, fake), [error])
+        rounds = [
+            make_fakes.is_round(s)
+            for s in ("2,300", "130", "54", "146.6", "8,848.86", "7")
+        ]
+        self.assertEqual(rounds, [True, True, False, False, False, False])
+
+    def test_dates(self):
+        self.assertEqual(make_fakes.date_errors("20 July 1969", "16 July 1972"), [])
+        self.assertEqual(make_fakes.date_errors("1969", "1971"), [])
+        self.assertEqual(
+            make_fakes.date_errors("1 January 1969", "31 December 1998"), []
+        )
+        self.assertEqual(
+            make_fakes.date_errors("1 January 1969", "31 December 1999"),
+            ["date: more than 30 years from the real date"],
+        )
+        self.assertEqual(
+            make_fakes.date_errors("July 1969", "1972"),
+            ["date: real span is not in a supported date format"],
+        )
+        cases = {
+            "July 16, 1972": "date: format or precision differs",
+            "1972": "date: format or precision differs",
+            "06 July 1972": "date: format or precision differs",
+            "20 july 1972": "date: format or precision differs",
+            "31 February 1970": "date: not a real calendar date",
+            "20 July 1969": "date: same as the real span",
+            "20 July 2000": "date: more than 30 years from the real date",
+        }
+        for fake, error in cases.items():
+            with self.subTest(fake=fake):
+                self.assertEqual(make_fakes.date_errors("20 July 1969", fake), [error])
+
+    def test_entities(self):
+        lookup = KINDS.get
+        self.assertEqual(make_fakes.entity_errors("Canberra", "Sydney", lookup), [])
+        self.assertEqual(
+            make_fakes.entity_errors("Canberra", "Tasmania", lookup),
+            ["entity: not the same kind of thing (Wikidata instance-of differs)"],
+        )
+        self.assertEqual(
+            make_fakes.entity_errors("Canberra", "Canberra, ACT", lookup),
+            ["entity: names the same thing as the real span"],
+        )
+        self.assertEqual(
+            make_fakes.entity_errors("Canberra", "Nowhereville", lookup),
+            ["entity: fake has no unambiguous Wikipedia article"],
+        )
+
+    def test_citations(self):
+        real = "A Mathematical Theory of Communication"
+        unrelated = lambda title: ["Something Else Entirely"]
+        style_error = "citation: format differs (capitalisation, subtitle colon or final punctuation)"
+        self.assertEqual(
+            make_fakes.citation_errors(
+                real, "A Statistical Theory of Signal Exchange", unrelated
+            ),
+            [],
+        )
+        self.assertEqual(
+            make_fakes.citation_errors(
+                real, "A statistical theory of signal exchange", unrelated
+            ),
+            [style_error],
+        )
+        self.assertEqual(
+            make_fakes.citation_errors(real, "A Theory: Of Signal Exchange", unrelated),
+            [style_error],
+        )
+        existing = lambda title: ["The Mathematical Theory of Communication"]
+        self.assertEqual(
+            make_fakes.citation_errors(
+                real, "The Mathematical Theory of Communication", existing
+            ),
+            ["citation: Crossref finds a work with this title"],
+        )
+        self.assertEqual(
+            make_fakes.citation_style(
+                "DNA sequencing with chain-terminating inhibitors"
+            ),
+            ("sentence", False, False),
+        )
+
+    def test_checks_for_all_types(self):
+        dated = candidate(
+            hallucination_type="wrong_date",
+            answer_real=REAL.replace(
+                "1,538 degrees Celsius", "temperatures first measured on 20 July 1969"
+            ),
+            real_span="20 July 1969",
+        )
+        self.assertEqual(
+            make_fakes.check(dated, "16 July 1972", "Measured on 20 July 1969.")[0], []
+        )
+        self.assertIn(
+            "fabricated span appears in the source article",
+            make_fakes.check(dated, "16 July 1972", "Repeated on July 16, 1972.")[0],
+        )
+        cited = citation()
+        fake_title = "Molecular Structure of Viral Proteins: A Model for Ribonucleic Acid Folding"
+        self.assertEqual(
+            make_fakes.check(
+                cited, fake_title, "", search=lambda title: ["Unrelated Work"]
+            )[0],
+            [],
+        )
+        self.assertEqual(
+            make_fakes.check(cited, fake_title, "", search=lambda title: [title])[0],
+            ["citation: Crossref finds a work with this title"],
+        )
+        article = "Pure iron melts at 1538 °C and boils at 2862 °C."
+        self.assertEqual(make_fakes.check(candidate(), "1,547", article), ([], []))
+        self.assertIn(
+            "fabricated span appears in the source article",
+            make_fakes.check(candidate(), "2,862", article)[0],
+        )
+        repeated = candidate(answer_real=REAL + " Steel melts at 1,425.")
+        self.assertEqual(
+            make_fakes.check(repeated, "1,425", "")[0],
+            ["fabricated span already appears in the real answer"],
+        )
+        entity = candidate(
+            hallucination_type="wrong_entity",
+            answer_real=REAL.replace("Pure iron", "In Canberra, pure iron"),
+            real_span="Canberra",
+        )
+        self.assertEqual(
+            make_fakes.check(entity, "Sydney", "", lookup=KINDS.get), ([], [])
+        )
+        # A length outside 0.7 to 1.3 times the real span is flagged for review, not rejected.
+        self.assertEqual(
+            make_fakes.check(entity, "Queanbeyan City", "", lookup=KINDS.get),
+            ([], ["length_ratio_1.88"]),
+        )
+
+    def test_prompts_spell_out_pattern_and_kind(self):
+        self.assertIn('exactly the pattern "#,###"', make_fakes.prompt(candidate()))
+        with mock.patch.object(
+            common, "wikidata_entity", lambda name: ("Q35802", {"Q5"})
+        ):
+            self.assertEqual(make_fakes.entity_kind("Alexander Fleming"), "person")
+        with (
+            mock.patch.object(
+                common,
+                "wikidata_entity",
+                lambda name: ("Q248", {"Q891723", "Q4830453"}),
+            ),
+            mock.patch.object(
+                common,
+                "wikidata_labels",
+                lambda qids: [
+                    {"Q4830453": "business", "Q891723": "public company"}[q]
+                    for q in qids
+                ],
+            ),
+        ):
+            self.assertEqual(
+                make_fakes.entity_kind("Intel"), "business or public company"
+            )
+        with mock.patch.object(common, "wikidata_entity", lambda name: None):
+            self.assertEqual(make_fakes.entity_kind("Nowhere"), "thing")
+        entity = candidate(
+            hallucination_type="wrong_entity",
+            answer_real=REAL.replace("Pure iron", "Intel iron"),
+            real_span="Intel",
+        )
+        self.assertIn(
+            "a different, real business or public company that has its own",
+            make_fakes.prompt(entity, "business or public company"),
+        )
+
+    def test_reply_parsing_and_kept_order(self):
+        reply = '{"replacements": [" \\"1,547\\" ", "1,547", "1,529", "1,561"]}'
+        self.assertEqual(
+            make_fakes.parse_replacements(reply), ["1,547", "1,529", "1,561"]
+        )
+        self.assertEqual(make_fakes.parse_replacements("not json"), [])
+        attempts, kept = make_fakes.judge(candidate(), ["1538", "1,547", "1,529"], "")
+        self.assertEqual([a["status"] for a in attempts], ["rejected", "kept", "kept"])
+        self.assertEqual([fake for fake, _ in kept], ["1,547", "1,529"])
 
 
 if __name__ == "__main__":

@@ -44,6 +44,52 @@ Outputs:
 - `research/data/candidates_v1_failed.csv`: every failing candidate with its reasons. Nothing is dropped silently.
 - `research/data/sources_v1.csv`: each candidate's `status`, the exact Wikipedia revision (or DOI) checked, and any flags. Later stages check against that same revision.
 
+## Stage 2: fakes
+
+Model: `microsoft/Phi-3-mini-4k-instruct-gguf`, file `Phi-3-mini-4k-instruct-q4.gguf` at revision `a64113399c2f6b8ad3e11c394733a2ddadaa7f33`, SHA-256 `8a83c7fb9049a9b2e92266fa7ad04933bb53aa1e85136b7b30f1b8000ff2edef` (MIT licence, not gated). Phi is not one of the families evaluated later (Gemma, Llama, Qwen). It runs locally on CPU through `llama-cpp-python` 0.3.36, one candidate at a time, with `n_gpu_layers=0`, `n_threads=6`, `n_ctx=2048`, temperature 0.7, top-p 0.95, at most 256 new tokens, and seed `20261101`, reset for every candidate so each result does not depend on run order. Source fetches and checks run in 4 worker threads alongside generation. Replies are constrained to the JSON schema `{"replacements": [3 strings]}`. The local build used `CMAKE_ARGS="-DGGML_METAL=OFF"` so no GPU code is compiled; other machines may differ in the last digits of sampling, so the committed outputs are the record.
+
+Run (the script downloads the pinned file on first use and refuses one whose SHA-256 differs):
+
+```sh
+CMAKE_ARGS="-DGGML_METAL=OFF" research/.venv/bin/pip install llama-cpp-python==0.3.36   # once
+cd research/dataset_generation
+../.venv/bin/python make_fakes.py
+```
+
+The model's chat template has no system role, so the whole prompt is one user message. The exact template (Python `str.format`, with `{rule}` filled from the list below):
+
+```text
+You are helping build a research quiz about spotting AI hallucinations.
+
+Question: {question}
+Correct answer: {answer}
+
+Write 3 different wrong replacements for the exact text "{span}" in the correct answer. {rule} Each replacement must read naturally when swapped into the answer, so that a careful reader might believe it. Give only the replacement text, not the whole answer. Reply in JSON as {"replacements": ["...", "...", "..."]}.
+```
+
+Rules by type. `{span}` is the real span; `{pattern}` is the real number with each digit shown as `#` (`1,538` gives `#,###`); `{kind}` is `person` when the real entity is a human on Wikidata, and otherwise the English labels of its first two Wikidata "instance of" classes (`business or public company` for Intel).
+
+- `wrong_number`: Each must be a different, believable number written with exactly the pattern "{pattern}", where each # stands for one digit: the same separators and decimal places, with no units or words added. Avoid round numbers.
+- `wrong_date`: Each must be a different, believable date written in exactly the same format as "{span}" and no more than 30 years away from it.
+- `wrong_entity`: Each must be the name of a different, real {kind} that has its own English Wikipedia article, so it is the same kind of thing as "{span}". Give the name only.
+- `invented_citation`: Each must be an invented title of a publication that does not exist, with the same style, capitalization and length as "{span}". Never use the title of a real work.
+
+Each of the 3 replacements replaces only that one occurrence of `real_span`, and is kept only if it passes:
+
+- `wrong_number`: the same shape as the real value (every digit in the same place, so the same unit, separators, decimals and digit count), no leading zero, a different value, and not round (ending in 0) unless the real value is round.
+- `wrong_date`: the same written format and precision (`20 July 1969`, `July 20, 1969` or a year), a real calendar date, within 30 years, and different.
+- `wrong_entity`: resolves to an unambiguous English Wikipedia article, is a different Wikidata item, and shares at least one Wikidata "instance of" (P31) class with the real one (person with person, city with city).
+- `invented_citation`: the same title style (title or sentence case, subtitle colon, final punctuation), and Crossref returns no work with a matching title.
+- All types: not already in the real answer, not anywhere in the source article (the same Wikipedia revision checked in stage 1; DOI-sourced citations have no article text, so the Crossref check covers them), and the completed pair passes `import_pairs.validate`. A fabricated span outside 0.7 to 1.3 times the real span's length is flagged (`length_ratio_…`), not dropped.
+
+The first passing replacement is the main fake and up to two more become alternates.
+
+Outputs:
+
+- `research/data/fakes_v1.csv`: candidates with a main fake, alternates `alt_fake_2` and `alt_fake_3` (fabricated spans), the source revision, flags and `model_name`.
+- `research/data/fakes_v1_failed.csv`: candidates with no passing replacement, with every replacement's reasons.
+- `research/data/fakes_v1_attempts.csv`: every replacement the model gave, with its verdict, reasons and flags.
+
 ## Attention checks
 
 `research/data/attention_checks_v1.csv` holds 4 attention checks written by hand, one per type, each with an obviously absurd fabricated span ("four hundred thousand" legs, "a bowl of tomato soup"). They are complete import rows and pass the importer's rules, including the real-span rule.
