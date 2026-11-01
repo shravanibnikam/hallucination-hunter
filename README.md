@@ -76,7 +76,7 @@ brew services start postgresql@17
 createdb hallucination_hunter
 ```
 
-On another platform, start your installed PostgreSQL server and create the same database using your configured database role. Set `DATABASE_URL` in `.env.local` to its connection URL (for the default Homebrew role, `postgresql://localhost/hallucination_hunter`). Set `APP_URL=http://localhost:3000`, and `STUDY_STATUS=open` to run the consent flow (unset means closed free play). You can instead use a dedicated Supabase Free development project with the connection details described in [deploy.md](docs/deploy.md). Never commit `.env.local`.
+On another platform, start your installed PostgreSQL server and create the same database using your configured database role. Set `DATABASE_URL` in `.env.local` to its connection URL (for the default Homebrew role, `postgresql://localhost/hallucination_hunter`). Set `APP_URL=http://localhost:3000`. To run the study flow locally, add `STUDY_STATUS=open` to `.env.local` (it is not in `.env.example`); leaving it unset runs closed free play. You can instead use a dedicated Supabase Free development project with the connection details described in [deploy.md](docs/deploy.md). Never commit `.env.local`.
 
 The Python tools and `psql` read environment variables, not Next.js env files. For the trusted `.env.local` you just wrote, load it into your shell:
 
