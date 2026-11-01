@@ -1,36 +1,91 @@
 {
   "input": "data/fakes_v1.csv",
-  "pairs": 126,
-  "folds": 10,
-  "seed": 20261101,
-  "accuracy": 0.5634920634920635,
-  "ci95": [
-    0.4762865697655906,
-    0.6469406346870917
-  ],
   "passes": true,
-  "accuracy_by_type": {
-    "invented_citation": {
-      "pairs": 34,
-      "accuracy": 0.7352941176470589
-    },
-    "wrong_date": {
-      "pairs": 39,
-      "accuracy": 0.5897435897435898
+  "overall": {
+    "pairs": 126,
+    "folds": 10,
+    "seed": 20261101,
+    "accuracy": 0.5158730158730159,
+    "ci95": [
+      0.42944290055248285,
+      0.6013639005606878
+    ],
+    "passes": true,
+    "coefficients": {
+      "answer_length": -0.0855816984916718,
+      "span_length": -0.0855816984916718,
+      "digit_count": 0.3181089032154298,
+      "punctuation_count": -0.30087947553230854
+    }
+  },
+  "by_type": {
+    "wrong_number": {
+      "pairs": 28,
+      "folds": 10,
+      "seed": 20261101,
+      "accuracy": 0.5,
+      "ci95": [
+        0.32633127336832435,
+        0.6736687266316757
+      ],
+      "passes": true,
+      "coefficients": {
+        "answer_length": 0.0,
+        "span_length": 0.0,
+        "digit_count": 0.0,
+        "punctuation_count": 0.0
+      }
     },
     "wrong_entity": {
       "pairs": 25,
-      "accuracy": 0.48
+      "folds": 10,
+      "seed": 20261101,
+      "accuracy": 0.52,
+      "ci95": [
+        0.33498516822009217,
+        0.6996871416694923
+      ],
+      "passes": true,
+      "coefficients": {
+        "answer_length": 0.137031841650983,
+        "span_length": 0.137031841650983,
+        "digit_count": 0.0,
+        "punctuation_count": -0.4811082285560409
+      }
     },
-    "wrong_number": {
-      "pairs": 28,
-      "accuracy": 0.39285714285714285
+    "wrong_date": {
+      "pairs": 39,
+      "folds": 10,
+      "seed": 20261101,
+      "accuracy": 0.5128205128205128,
+      "ci95": [
+        0.3619936277532354,
+        0.6613482477597057
+      ],
+      "passes": true,
+      "coefficients": {
+        "answer_length": 0.08673431927834059,
+        "span_length": 0.08673431927834059,
+        "digit_count": 0.3692469785319535,
+        "punctuation_count": 0.0
+      }
+    },
+    "invented_citation": {
+      "pairs": 34,
+      "folds": 10,
+      "seed": 20261101,
+      "accuracy": 0.5882352941176471,
+      "ci95": [
+        0.422215937544422,
+        0.7363403173510689
+      ],
+      "passes": true,
+      "coefficients": {
+        "answer_length": -0.3426816284345271,
+        "span_length": -0.3426816284345271,
+        "digit_count": 0.0,
+        "punctuation_count": 0.0
+      }
     }
-  },
-  "coefficients": {
-    "answer_length": -0.4527177697327571,
-    "span_length": -0.4527177697327571,
-    "digit_count": 0.13575806141475086,
-    "punctuation_count": -0.3825039123593292
   }
 }

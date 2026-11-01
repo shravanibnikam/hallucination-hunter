@@ -352,6 +352,36 @@ class FakeChecks(unittest.TestCase):
             ["entity: fake has no unambiguous Wikipedia article"],
         )
 
+    def test_citation_length_and_word_count(self):
+        real = "A Mathematical Theory of Communication"
+        unrelated = lambda title: ["Something Else Entirely"]
+        self.assertEqual(make_fakes.citation_errors(real, "A Statistical Theory of Signal Exchange", unrelated), [])
+        # 27 characters against 38 is 0.71, outside 0.85 to 1.15, though within the general 0.7 to 1.3 flag.
+        self.assertEqual(make_fakes.citation_errors(real, "A Theory of Signal Exchange", unrelated), ["citation: length outside 0.85 to 1.15 times the real title"])
+        self.assertIn("exactly 11 words long", make_fakes.prompt(citation()))
+
+    def test_citation_punctuation_order_and_two_asks(self):
+        real = "Gender: A Useful Category of Historical Analysis"
+        unrelated = lambda title: ["Something Else Entirely"]
+        self.assertEqual(make_fakes.citation_errors(real, "Labour: A Telling Category of Political Inquiry", unrelated), [])
+        for fake in ("Labour: A Telling Category of Politico-Social Inquiry", "Labour: A Telling, Basic Category of Inquiry", "Labour: A Worker\u2019s Category of Political Inquiry"):
+            with self.subTest(fake=fake):
+                self.assertEqual(make_fakes.citation_errors(real, fake, unrelated), ["citation: punctuation differs from the real title"])
+        # Same characters in a different order also differ.
+        self.assertNotEqual(make_fakes.punctuation("A-B: C"), make_fakes.punctuation("A: B-C"))
+        self.assertEqual(make_fakes.seeds(citation()), (20261101, 20261102))
+        self.assertEqual(make_fakes.seeds(candidate()), (20261101,))
+
+    def test_closest_length_citation_is_main(self):
+        row = citation(real_span="A Mathematical Theory of Communication", answer_real=CITED.replace("Molecular Structure of Nucleic Acids: A Structure for Deoxyribose Nucleic Acid", "A Mathematical Theory of Communication"))
+        fakes = ["A Numerical Account of Transmissions", "A Statistical Theory of Signal Exchange", "A Mechanical Theory of Communicating"]
+        source = {"source_revision": "10.1/x", "flags": ""}
+        logged, main, failed = make_fakes.evaluate(row, source, fakes, (20261101, 20261101, 20261102), search=lambda title: ["Unrelated"])
+        self.assertIsNone(failed)
+        # Real title: 38 characters. 39 is closest (the second reply), then the two 36s in reply order.
+        self.assertEqual([main["fabricated_span"], main["alt_fake_2"], main["alt_fake_3"]], ["A Statistical Theory of Signal Exchange", "A Numerical Account of Transmissions", "A Mechanical Theory of Communicating"])
+        self.assertEqual([a["seed"] for a in logged], [20261101, 20261101, 20261102])
+
     def test_citations(self):
         real = "A Mathematical Theory of Communication"
         unrelated = lambda title: ["Something Else Entirely"]
@@ -555,6 +585,13 @@ class ArtifactCheck(unittest.TestCase):
         )
         self.assertTrue(all((row[0] > 0) == bool(label) for row, label in zip(X, y)))
 
+    def test_a_tell_in_one_type_fails_the_per_type_check(self):
+        rows = pairs(60) + [{**r, "hallucination_type": "invented_citation", "fabricated_span": r["fabricated_span"][:-1], "answer_fake": r["answer_fake"].replace(r["fabricated_span"], r["fabricated_span"][:-1])} for r in pairs(30)]
+        result = artifact_check.check(rows)
+        self.assertFalse(result["by_type"]["invented_citation"]["passes"])
+        self.assertFalse(result["passes"])
+        self.assertTrue(artifact_check.check(pairs(60))["passes"])
+
     def test_wilson_interval(self):
         low, high = artifact_check.wilson(50, 100)
         self.assertAlmostEqual(low, 0.4038, places=3)
@@ -571,6 +608,7 @@ class ReviewSheet(unittest.TestCase):
         rows = make_review.review_rows(fakes, [{"id": "c", "verdict": "wrong"}, {"id": "a", "verdict": "ok"}])
         self.assertEqual([r["question"] for r in rows], ["c", "a", "b"])
         self.assertEqual([r["flags"] for r in rows], ["length_ratio_1.50;claim_wrong", "", ""])
+        self.assertEqual([r["length_diff"] for r in rows], [0, 0, 0])
         self.assertTrue(all(r["keep"] == r["notes"] == "" for r in rows))
 
     def test_never_overwrites_hand_entries(self):

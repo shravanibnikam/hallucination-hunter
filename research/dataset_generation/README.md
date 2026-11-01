@@ -24,7 +24,7 @@ Use `notes` for anything else, such as a correction to the real answer or a bett
 | `wrong_number` | 11 | 10 | 7 | 28 |
 | `wrong_entity` | 13 | 6 | 6 | 25 |
 | `wrong_date` | 13 | 13 | 13 | 39 |
-| `invented_citation` | 12 | 9 | 13 | 34 |
+| `invented_citation` | 12 | 12 | 10 | 34 |
 
 `wrong_entity` is the tightest: with 6 in geography and 6 in history, the best possible split is 8/6/6, and you can drop at most 5 entity rows.
 
@@ -34,7 +34,7 @@ For each row, check that the real answer is right, that the fake is wrong but be
 - `length_ratio_…`: the fake is much shorter or longer than the real span, a possible tell. `alt2:`/`alt3:` prefixes mean the same for an alternate.
 - `crossref_year_…`: the year in the answer is one off the year Crossref gives.
 
-Citation fakes run shorter than the real titles (stage 3 below), so prefer citation fakes or alternates close in length to the real title.
+`length_diff` shows how many characters longer (positive) or shorter (negative) the main fake span is than the real one, on every row.
 
 Do not rerun `make_review.py` once you have started: it refuses to overwrite a sheet with entries, but your copy is the record. Nothing is selected or imported until the hand check is done.
 
@@ -50,7 +50,7 @@ Network access is needed for the English Wikipedia and Wikidata APIs and the Cro
 
 ## Stage 1: candidate real answers
 
-Input: `research/data/candidates_v1.csv`, 160 candidates (40 per type, split 14/13/13 across `science`, `geography` and `history`). Columns: `id`, `hallucination_type`, `category`, `question`, `answer_real`, `real_span`, `source_url`. Every row has a UUID that later stages keep.
+Input: `research/data/candidates_v1.csv`: 160 candidates (40 per type, split 14/13/13 across `science`, `geography` and `history`), plus 12 citation candidates added later (6 science, 6 geography) to give the stricter citation checks enough material. Columns: `id`, `hallucination_type`, `category`, `question`, `answer_real`, `real_span`, `source_url`. Every row has a UUID that later stages keep.
 
 Provenance: the candidates were written by Claude (`claude-opus-5-5`) in a Claude Code session, from its own knowledge, following the rules below. They were not copied from Wikipedia; Wikipedia and Crossref are used only to check them. No topic appears twice, so one item never gives away another.
 
@@ -106,17 +106,19 @@ Rules by type. `{span}` is the real span; `{pattern}` is the real number with ea
 - `wrong_number`: Each must be a different, believable number written with exactly the pattern "{pattern}", where each # stands for one digit: the same separators and decimal places, with no units or words added. Avoid round numbers.
 - `wrong_date`: Each must be a different, believable date written in exactly the same format as "{span}" and no more than 30 years away from it.
 - `wrong_entity`: Each must be the name of a different, real {kind} that has its own English Wikipedia article, so it is the same kind of thing as "{span}". Give the name only.
-- `invented_citation`: Each must be an invented title of a publication that does not exist, with the same style, capitalization and length as "{span}". Never use the title of a real work.
+- `invented_citation`: Each must be an invented title of a publication that does not exist, exactly {words} words long like "{span}": keep its small words (such as "of", "the", "and", "for") and its punctuation in the same places, and replace every other word with a different word of about the same length on a related topic, with the same capitalization. Never use the title of a real work.
 
 Each of the 3 replacements replaces only that one occurrence of `real_span`, and is kept only if it passes:
 
 - `wrong_number`: the same shape as the real value (every digit in the same place, so the same unit, separators, decimals and digit count), no leading zero, a different value, and not round (ending in 0) unless the real value is round.
 - `wrong_date`: the same written format and precision (`20 July 1969`, `July 20, 1969` or a year), a real calendar date, within 30 years, and different.
 - `wrong_entity`: resolves to an unambiguous English Wikipedia article, is a different Wikidata item, and shares at least one Wikidata "instance of" (P31) class with the real one (person with person, city with city).
-- `invented_citation`: the same title style (title or sentence case, subtitle colon, final punctuation), and Crossref returns no work with a matching title.
+- `invented_citation`: the same title style (title or sentence case, subtitle colon, final punctuation); exactly the same punctuation characters as the real title in the same order (hyphens, en and em dashes, colons, commas, apostrophes, slashes and any others); a length between 0.85 and 1.15 times the real title's; and Crossref returns no work with a matching title.
 - All types: not already in the real answer, not anywhere in the source article (the same Wikipedia revision checked in stage 1; DOI-sourced citations have no article text, so the Crossref check covers them), and the completed pair passes `import_pairs.validate`. A fabricated span outside 0.7 to 1.3 times the real span's length is flagged (`length_ratio_…`), not dropped.
 
-The first passing replacement is the main fake and up to two more become alternates.
+For every type except citations, the first passing replacement is the main fake and up to two more become alternates. Citations get two asks of 3 replacements, with seeds `20261101` and `20261102` (6 replacements), and the passing title closest in character length to the real one becomes the main fake, with the next closest as alternates, so length gives as little away as possible. The `seed` column of the attempts log records which ask produced each replacement.
+
+`--types` and `--ids` regenerate a subset and keep every other row as it is; because each candidate's seed is reset, the subset matches what a full run produces.
 
 Outputs:
 
@@ -136,11 +138,21 @@ cd research/dataset_generation
 
 The result, with accuracy by type and the fitted coefficients, is written to `research/data/artifact_check_v1.json`.
 
-Result on the 126 candidates with a passing fake: accuracy 56.3%, 95% CI [47.6%, 64.7%], so the check **passes**. By type, the pooled model scores 39% on numbers, 48% on entities and 59% on dates, but **74% on citations**: 26 of 34 citation fakes are shorter than the real title (median 0.83 of its length), and on citations alone the interval [0.57, 0.85] excludes 50%. When selecting the final citations, prefer fakes (or alternates) close in length to the real title, then rerun this check on the final 80.
+It runs once on all pairs and again with a separate model for each type, so a tell confined to one type cannot hide in the pool; it passes only if every interval includes 50%. Result on the candidates with a passing fake:
+
+| | Pairs | Accuracy | 95% CI | |
+|---|---|---|---|---|
+| Overall | 126 | 51.6% | [42.9%, 60.1%] | pass |
+| `wrong_number` | 28 | 50.0% | [32.6%, 67.4%] | pass |
+| `wrong_entity` | 25 | 52.0% | [33.5%, 70.0%] | pass |
+| `wrong_date` | 39 | 51.3% | [36.2%, 66.1%] | pass |
+| `invented_citation` | 34 | 58.8% | [42.2%, 73.6%] | pass |
+
+An earlier citation run failed on its own (74%, then 71%): fake titles were shorter and dropped hyphens. The punctuation check, the 0.85 to 1.15 length bound, two asks per citation and closest-length selection removed the tell.
 
 ## Stage 4: review sheet
 
-`make_review.py` writes `research/data/review_v1.csv`, one row per candidate with a passing fake, sorted by `hallucination_type` and then `category`, with empty `keep` and `notes` columns. `alt_fake_2` and `alt_fake_3` hold the alternate fabricated spans, which replace `real_span` in `answer_real` exactly as the main fake does. It refuses to overwrite a sheet that already has entries in `keep` or `notes`.
+`make_review.py` writes `research/data/review_v1.csv`, one row per candidate with a passing fake, sorted by `hallucination_type` and then `category`, with empty `keep` and `notes` columns. `length_diff` is the main fake span's length minus the real span's, in characters. `alt_fake_2` and `alt_fake_3` hold the alternate fabricated spans, which replace `real_span` in `answer_real` exactly as the main fake does. It refuses to overwrite a sheet that already has entries in `keep` or `notes`.
 
 ```sh
 cd research/dataset_generation

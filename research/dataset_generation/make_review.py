@@ -22,6 +22,7 @@ FIELDS = (
     "answer_fake",
     "real_span",
     "fabricated_span",
+    "length_diff",
     "alt_fake_2",
     "alt_fake_3",
     "source_url",
@@ -37,7 +38,7 @@ def review_rows(fakes, claims=()):
     rows = []
     for row in fakes:
         flags = [f for f in row["flags"].split(";") if f] + ([f"claim_{verdicts[row['id']]}"] if row["id"] in verdicts else [])
-        rows.append({**row, "flags": ";".join(flags), "keep": "", "notes": ""})
+        rows.append({**row, "length_diff": len(row["fabricated_span"]) - len(row["real_span"]), "flags": ";".join(flags), "keep": "", "notes": ""})
     return sorted(rows, key=lambda r: (r["hallucination_type"], r["category"], r["question"]))
 
 

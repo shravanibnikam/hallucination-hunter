@@ -4,11 +4,13 @@ Every replacement and its verdict go to research/data/fakes_v1_attempts.csv; can
 replacement go to research/data/fakes_v1.csv and the rest to research/data/fakes_v1_failed.csv.
 """
 
+import argparse
 import collections
 import hashlib
 import json
 import re
 import sys
+import unicodedata
 import urllib.request
 from datetime import date
 
@@ -25,6 +27,8 @@ MODEL_NAME = f"{MODEL['repo']}/{MODEL['file']}"
 MODEL_PATH = common.HERE / "models" / MODEL["file"]
 # Fixed for reproducibility: the seed is reset for every candidate, and CPU thread count affects float summation order.
 SEED = 20261101
+# Citations are asked twice, 3 replacements per ask, with these two seeds; every other type once with SEED.
+CITATION_SEEDS = (20261101, 20261102)
 TEMPERATURE = 0.7
 TOP_P = 0.95
 MAX_TOKENS = 256
@@ -66,15 +70,16 @@ RULES = {
     "wrong_number": 'Each must be a different, believable number written with exactly the pattern "{pattern}", where each # stands for one digit: the same separators and decimal places, with no units or words added. Avoid round numbers.',
     "wrong_date": 'Each must be a different, believable date written in exactly the same format as "{span}" and no more than 30 years away from it.',
     "wrong_entity": 'Each must be the name of a different, real {kind} that has its own English Wikipedia article, so it is the same kind of thing as "{span}". Give the name only.',
-    "invented_citation": 'Each must be an invented title of a publication that does not exist, with the same style, capitalization and length as "{span}". Never use the title of a real work.',
+    "invented_citation": 'Each must be an invented title of a publication that does not exist, exactly {words} words long like "{span}": keep its small words (such as "of", "the", "and", "for") and its punctuation in the same places, and replace every other word with a different word of about the same length on a related topic, with the same capitalization. Never use the title of a real work.',
 }
 PROMPT = (
     "You are helping build a research quiz about spotting AI hallucinations.\n\n"
     "Question: {question}\nCorrect answer: {answer}\n\n"
     'Write 3 different wrong replacements for the exact text "{span}" in the correct answer. {rule} '
     "Each replacement must read naturally when swapped into the answer, so that a careful reader might believe it. "
-    'Give only the replacement text, not the whole answer. Reply in JSON as {{"replacements": ["...", "...", "..."]}}.'
+    "Give only the replacement text, not the whole answer. {reply}"
 )
+REPLY = 'Reply in JSON as {"replacements": ["...", "...", "..."]}.'
 SMALL_WORDS = {
     "a",
     "an",
@@ -105,8 +110,9 @@ SMALL_WORDS = {
 
 def prompt(row, kind="thing"):
     """kind names what an entity is (from Wikidata), so the model is told what the replacements must be."""
-    rule = RULES[row["hallucination_type"]].format(span=row["real_span"], pattern=re.sub(r"\d", "#", row["real_span"]), kind=kind)
-    return PROMPT.format(question=row["question"], answer=row["answer_real"], span=row["real_span"], rule=rule)
+    span = row["real_span"]
+    rule = RULES[row["hallucination_type"]].format(span=span, pattern=re.sub(r"\d", "#", span), kind=kind, words=len(span.split()))
+    return PROMPT.format(question=row["question"], answer=row["answer_real"], span=span, rule=rule, reply=REPLY)
 
 
 def entity_kind(span):
@@ -212,11 +218,25 @@ def citation_style(title):
     return case, ":" in title, title.rstrip()[-1:] in ".?!"
 
 
+def punctuation(text):
+    """Every punctuation character, in order: hyphens, dashes, colons, commas, apostrophes, slashes and the rest."""
+    return [c for c in text if unicodedata.category(c).startswith("P")]
+
+
+def seeds(row):
+    return CITATION_SEEDS if row["hallucination_type"] == "invented_citation" else (SEED,)
+
+
 def citation_errors(real, fake, search):
     if citation_style(fake) != citation_style(real):
         return [
             "citation: format differs (capitalisation, subtitle colon or final punctuation)"
         ]
+    if punctuation(fake) != punctuation(real):
+        return ["citation: punctuation differs from the real title"]
+    # A fake title shorter or longer than the real one is a surface tell (stage 3 found shorter fakes in the first runs).
+    if not 0.85 <= len(fake) / len(real) <= 1.15:
+        return ["citation: length outside 0.85 to 1.15 times the real title"]
     if any(common.same_title(fake, found) for found in search(fake)):
         return ["citation: Crossref finds a work with this title"]
     return []
@@ -249,8 +269,8 @@ def check(
     return errors, [] if 0.7 <= ratio <= 1.3 else [f"length_ratio_{ratio:.2f}"]
 
 
-def judge(row, replacements, source_text, **lookups):
-    """Attempt log rows plus the kept replacements (first = main fake, then up to 2 alternates)."""
+def judge(row, replacements, source_text, asked_with=(), **lookups):
+    """Attempt log rows plus the kept replacements in reply order; asked_with gives each replacement's seed."""
     attempts, kept = [], []
     for rank, fake in enumerate(replacements, 1):
         errors, flags = check(row, fake, source_text, **lookups)
@@ -258,6 +278,7 @@ def judge(row, replacements, source_text, **lookups):
             {
                 "id": row["id"],
                 "rank": rank,
+                "seed": asked_with[rank - 1] if asked_with else "",
                 "replacement": fake,
                 "status": "rejected" if errors else "kept",
                 "reasons": "; ".join(errors),
@@ -294,13 +315,16 @@ def ensure_model():
         )
 
 
-def evaluate(row, source, replacements):
+def evaluate(row, source, replacements, asked_with=(), **lookups):
     """Check one candidate's replacements against the stage 1 revision of its source (runs in a worker thread)."""
     title = common.wikipedia_title(row["source_url"])
     source_text = common.wikipedia_page(revision=source["source_revision"])["text"] if title else ""
-    logged, kept = judge(row, replacements, source_text)
+    logged, kept = judge(row, replacements, source_text, asked_with, **lookups)
+    if row["hallucination_type"] == "invented_citation":
+        # The passing title closest in length to the real one is the main fake, then the next closest, so length gives least away.
+        kept.sort(key=lambda k: abs(len(k[0]) - len(row["real_span"])))
     if not logged:
-        logged = [{"id": row["id"], "rank": 0, "replacement": "", "status": "rejected", "reasons": "model reply had no usable replacements", "flags": ""}]
+        logged = [{"id": row["id"], "rank": 0, "seed": "", "replacement": "", "status": "rejected", "reasons": "model reply had no usable replacements", "flags": ""}]
     if not kept:
         return logged, None, {**row, "reason": " | ".join(f"{a['replacement']}: {a['reasons']}" for a in logged)}
     (fake, flags), alternates = kept[0], kept[1:]
@@ -309,34 +333,48 @@ def evaluate(row, source, replacements):
     return logged, fake_row, None
 
 
-def main():
+def main(argv=None):
     from concurrent.futures import ThreadPoolExecutor
 
     from llama_cpp import Llama
 
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--types", nargs="+", choices=common.TYPES, help="regenerate only these types; other rows are kept as they are")
+    parser.add_argument("--ids", nargs="+", help="regenerate only these candidate ids; other rows are kept as they are")
+    args = parser.parse_args(argv)
     ensure_model()
     sources = {s["id"]: s for s in common.read_csv(SOURCES) if s["status"] == "pass"}
-    rows = [r for r in common.read_csv(CANDIDATES) if r["id"] in sources]
+    passing = [r for r in common.read_csv(CANDIDATES) if r["id"] in sources]
+    # Each candidate's seed is reset, so regenerating a subset gives the same replies a full run would.
+    rows = [r for r in passing if (not args.types or r["hallucination_type"] in args.types) and (not args.ids or r["id"] in args.ids)]
     llm = Llama(str(MODEL_PATH), n_ctx=2048, n_threads=N_THREADS, n_gpu_layers=0, seed=SEED, verbose=False)
     # Generation stays sequential on the CPU; source fetches and checks overlap with it in a few polite threads.
     with ThreadPoolExecutor(max_workers=4) as pool:
         kinds = dict(zip((r["id"] for r in rows), pool.map(lambda r: entity_kind(r["real_span"]) if r["hallucination_type"] == "wrong_entity" else "thing", rows)))
         jobs = []
         for number, row in enumerate(rows, 1):
-            reply = llm.create_chat_completion(messages=[{"role": "user", "content": prompt(row, kinds[row["id"]])}], temperature=TEMPERATURE, top_p=TOP_P, max_tokens=MAX_TOKENS, seed=SEED, response_format={"type": "json_object", "schema": SCHEMA})
-            jobs.append(pool.submit(evaluate, row, sources[row["id"]], parse_replacements(reply["choices"][0]["message"]["content"])))
+            asked = []
+            for seed in seeds(row):
+                reply = llm.create_chat_completion(messages=[{"role": "user", "content": prompt(row, kinds[row["id"]])}], temperature=TEMPERATURE, top_p=TOP_P, max_tokens=MAX_TOKENS, seed=seed, response_format={"type": "json_object", "schema": SCHEMA})
+                for text in parse_replacements(reply["choices"][0]["message"]["content"]):
+                    if text.casefold() not in (t.casefold() for t, _ in asked):
+                        asked.append((text, seed))
+            jobs.append(pool.submit(evaluate, row, sources[row["id"]], [t for t, _ in asked], [s for _, s in asked]))
             print(f"{number}/{len(rows)} generated", flush=True)
         results = [job.result() for job in jobs]
-    attempts = [a for logged, _, _ in results for a in logged]
-    fakes = [fake for _, fake, _ in results if fake]
-    failed = [fail for _, _, fail in results if fail]
+    order = {r["id"]: n for n, r in enumerate(passing)}
+    redone = {r["id"] for r in rows}
+    kept = lambda path: [{"seed": str(SEED), **r} for r in common.read_csv(path) if r["id"] in order and r["id"] not in redone] if (args.types or args.ids) and path.exists() else []
+    attempts = sorted(kept(ATTEMPTS) + [a for logged, _, _ in results for a in logged], key=lambda a: (order[a["id"]], int(a["rank"])))
+    fakes = sorted(kept(FAKES) + [fake for _, fake, _ in results if fake], key=lambda r: order[r["id"]])
+    failed = sorted(kept(FAILED) + [fail for _, _, fail in results if fail], key=lambda r: order[r["id"]])
     common.write_csv(FAKES, fakes, FAKE_FIELDS)
     common.write_csv(FAILED, failed, ("id", "hallucination_type", "category", "question", "real_span", "source_url", "reason"))
-    common.write_csv(ATTEMPTS, attempts, ("id", "rank", "replacement", "status", "reasons", "flags"))
+    common.write_csv(ATTEMPTS, attempts, ("id", "rank", "seed", "replacement", "status", "reasons", "flags"))
     counts = collections.Counter((f["hallucination_type"], f["category"]) for f in fakes)
     for kind in common.TYPES:
         print(f"{kind:18}", "  ".join(f"{c} {counts[kind, c]}" for c in common.CATEGORIES))
-    print(f"{len(fakes)} of {len(rows)} candidates have a passing fake; failures in {FAILED.name}")
+    print(f"{len(fakes)} of {len(passing)} candidates have a passing fake ({len(rows)} regenerated); failures in {FAILED.name}")
     return 0
 
 
