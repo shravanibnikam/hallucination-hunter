@@ -90,6 +90,20 @@ Outputs:
 - `research/data/fakes_v1_failed.csv`: candidates with no passing replacement, with every replacement's reasons.
 - `research/data/fakes_v1_attempts.csv`: every replacement the model gave, with its verdict, reasons and flags.
 
+## Stage 3: artifact check
+
+`artifact_check.py` asks whether surface features alone can pick the fake in a pair. Each pair (real answer, main fake) is shown in a shuffled order with exactly half the fakes first, and a logistic regression (scikit-learn 1.9.1, no intercept, features scaled but not centred) sees only the differences, first minus second, in answer length, span length, digit count and punctuation count. Because the two answers differ only in the span, the answer-length and span-length differences are equal, so there are three independent signals. Accuracy comes from 10-fold stratified cross-validation (seed 20261101) with a 95% Wilson interval, and the check passes if that interval includes 50%.
+
+```sh
+cd research/dataset_generation
+../.venv/bin/python artifact_check.py                                      # all passing candidates
+../.venv/bin/python artifact_check.py --input FINAL.csv --output OUT.json   # later, on the final 80
+```
+
+The result, with accuracy by type and the fitted coefficients, is written to `research/data/artifact_check_v1.json`.
+
+Result on the 126 candidates with a passing fake: accuracy 56.3%, 95% CI [47.6%, 64.7%], so the check **passes**. By type, the pooled model scores 39% on numbers, 48% on entities and 59% on dates, but **74% on citations**: 26 of 34 citation fakes are shorter than the real title (median 0.83 of its length), and on citations alone the interval [0.57, 0.85] excludes 50%. When selecting the final citations, prefer fakes (or alternates) close in length to the real title, then rerun this check on the final 80.
+
 ## Attention checks
 
 `research/data/attention_checks_v1.csv` holds 4 attention checks written by hand, one per type, each with an obviously absurd fabricated span ("four hundred thousand" legs, "a bowl of tomato soup"). They are complete import rows and pass the importer's rules, including the real-span rule.

@@ -1,0 +1,36 @@
+{
+  "input": "data/fakes_v1.csv",
+  "pairs": 126,
+  "folds": 10,
+  "seed": 20261101,
+  "accuracy": 0.5634920634920635,
+  "ci95": [
+    0.4762865697655906,
+    0.6469406346870917
+  ],
+  "passes": true,
+  "accuracy_by_type": {
+    "invented_citation": {
+      "pairs": 34,
+      "accuracy": 0.7352941176470589
+    },
+    "wrong_date": {
+      "pairs": 39,
+      "accuracy": 0.5897435897435898
+    },
+    "wrong_entity": {
+      "pairs": 25,
+      "accuracy": 0.48
+    },
+    "wrong_number": {
+      "pairs": 28,
+      "accuracy": 0.39285714285714285
+    }
+  },
+  "coefficients": {
+    "answer_length": -0.4527177697327571,
+    "span_length": -0.4527177697327571,
+    "digit_count": 0.13575806141475086,
+    "punctuation_count": -0.3825039123593292
+  }
+}

@@ -7,6 +7,7 @@ from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "research" / "dataset_generation"))
+import artifact_check
 import check_sources
 import common
 import make_fakes
@@ -481,6 +482,83 @@ class FakeChecks(unittest.TestCase):
         attempts, kept = make_fakes.judge(candidate(), ["1538", "1,547", "1,529"], "")
         self.assertEqual([a["status"] for a in attempts], ["rejected", "kept", "kept"])
         self.assertEqual([fake for fake, _ in kept], ["1,547", "1,529"])
+
+
+def pairs(count, extra=""):
+    """Tiny fixture: same-shape number fakes, optionally with a tell-tale suffix on every fake."""
+    rows = []
+    for i in range(count):
+        real, fake = f"{100 + i}", f"{200 + i}"
+        answer = (
+            f"The tower in example {i} is {{}} metres tall, according to the survey."
+        )
+        rows.append(
+            {
+                "hallucination_type": ("wrong_number", "wrong_date")[i % 2],
+                "answer_real": answer.format(real),
+                "real_span": real,
+                "answer_fake": answer.format(fake + extra),
+                "fabricated_span": fake + extra,
+            }
+        )
+    return rows
+
+
+class ArtifactCheck(unittest.TestCase):
+    def test_no_surface_signal_passes(self):
+        result = artifact_check.run(pairs(40))
+        self.assertTrue(result["passes"])
+        self.assertLessEqual(result["ci95"][0], 0.5)
+        self.assertEqual((result["pairs"], result["folds"]), (40, 10))
+
+    def test_balanced_order_scores_exactly_half_without_signal(self):
+        # Exactly half the pairs show the fake first, so all-zero features score 50%, not a coin flip's share.
+        self.assertEqual(artifact_check.run(pairs(40))["accuracy"], 0.5)
+        self.assertEqual(sum(artifact_check.pair_features([("a", "a", "b", "b")] * 41)[1]), 20)
+
+    def test_noise_features_fit_a_classifier_and_still_pass(self):
+        # Fakes vary in length at random, unrelated to which one is fake: a fitted model should not beat chance.
+        import random
+
+        rng = random.Random(7)
+        rows = []
+        for i in range(120):
+            real, fake = "x" * rng.randint(3, 12), "y" * rng.randint(3, 12)
+            rows.append({"hallucination_type": "wrong_entity", "answer_real": f"It was {real}.", "real_span": real, "answer_fake": f"It was {fake}.", "fabricated_span": fake})
+        result = artifact_check.run(rows)
+        self.assertTrue(result["passes"])
+        self.assertNotEqual(result["coefficients"]["span_length"], 0)
+
+    def test_a_surface_tell_fails(self):
+        # Every fake is longer and carries extra digits and punctuation: the classifier finds it.
+        result = artifact_check.run(pairs(40, extra=" (est. 2,000)"))
+        self.assertFalse(result["passes"])
+        self.assertGreater(result["ci95"][0], 0.5)
+        self.assertEqual(result["accuracy"], 1.0)
+
+    def test_order_is_random_and_seeded(self):
+        X, y = artifact_check.pair_features(
+            [
+                (
+                    r["answer_real"],
+                    r["real_span"],
+                    r["answer_fake"],
+                    r["fabricated_span"],
+                )
+                for r in pairs(40, extra="!")
+            ]
+        )
+        self.assertTrue(0 < sum(y) < 40)
+        self.assertEqual(
+            y, artifact_check.pair_features([("a", "a", "bb!", "b!")] * 40)[1]
+        )
+        self.assertTrue(all((row[0] > 0) == bool(label) for row, label in zip(X, y)))
+
+    def test_wilson_interval(self):
+        low, high = artifact_check.wilson(50, 100)
+        self.assertAlmostEqual(low, 0.4038, places=3)
+        self.assertAlmostEqual(high, 0.5962, places=3)
+
 
 
 if __name__ == "__main__":
