@@ -29,6 +29,7 @@ interface ItemRow {
   answer_real: string;
   answer_fake: string;
   fabricated_span: string;
+  real_span: string | null;
   explanation: string;
   source_url: string | null;
   dataset_version: string;
@@ -41,7 +42,7 @@ async function lockSession(tx: TransactionSql, id: string) {
   return s;
 }
 async function item(tx: TransactionSql, id: string, position: number) {
-  const [i] = await tx<ItemRow[]> `select i.id, i.pair_id, i.position, i.fake_shown_on, i.shown_answer, i.served_at, p.question, p.category, p.answer_real, p.answer_fake, p.fabricated_span, p.explanation, p.source_url, p.dataset_version, p.is_attention_check from session_items i join pairs p on p.id=i.pair_id where i.session_id=${id} and i.position=${position}`;
+  const [i] = await tx<ItemRow[]> `select i.id, i.pair_id, i.position, i.fake_shown_on, i.shown_answer, i.served_at, p.question, p.category, p.answer_real, p.answer_fake, p.fabricated_span, p.real_span, p.explanation, p.source_url, p.dataset_version, p.is_attention_check from session_items i join pairs p on p.id=i.pair_id where i.session_id=${id} and i.position=${position}`;
   if (!i)
     throw new HttpError(404, "Item not found.");
   return i;
@@ -107,7 +108,7 @@ export async function writeGuess(input: z.infer<typeof guessSchema>) {
     const ms = Math.max(0, Math.min(600000, input.responseTimeMs));
     await tx`insert into guesses (session_item_id,session_id,pair_id,chosen_side,judgment,is_correct,confidence,response_time_ms,flagged_too_fast,app_version,dataset_version) values (${i.id},${s.id},${i.pair_id},${input.chosenSide ?? null},${input.judgment ?? null},${correct},${input.confidence},${ms},${ms < TOO_FAST_MS},${version},${i.dataset_version})`;
     const score = scoreGuesses(await orderedGuesses(tx, s.id));
-    return { isCorrect: correct, wasFabricated: s.condition === "paired" ? i.fake_shown_on : i.shown_answer === "fake", fabricatedAnswer: i.answer_fake, fabricatedSpan: i.fabricated_span, explanation: i.explanation, sourceUrl: i.source_url, score: score.score, currentStreak: score.currentStreak };
+    return { isCorrect: correct, wasFabricated: s.condition === "paired" ? i.fake_shown_on : i.shown_answer === "fake", fabricatedAnswer: i.answer_fake, fabricatedSpan: i.fabricated_span, answerReal: i.answer_real, realSpan: i.real_span, explanation: i.explanation, sourceUrl: i.source_url, score: score.score, currentStreak: score.currentStreak };
 
   });
 }

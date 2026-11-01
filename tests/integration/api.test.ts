@@ -60,8 +60,9 @@ for (const condition of ["paired", "single"] as const) {
     expect(Object.keys(payload).sort()).toEqual(["category", "display", "position", "question", "totalItems"]);
     expect(Object.keys(payload.display).sort()).toEqual(condition === "paired" ? ["left", "right"] : ["answer"]);
     const json = JSON.stringify(payload);
-    for (const key of ["answer_real", "answer_fake", "fabricated_span", "explanation", "fake_shown_on", "shown_answer", "pair_id", "dataset_version", "is_attention_check"])
+    for (const key of ["answer_real", "answer_fake", "fabricated_span", "real_span", "hallucination_type", "answerReal", "realSpan", "fabricatedSpan", "hallucinationType", "explanation", "fake_shown_on", "shown_answer", "pair_id", "dataset_version", "is_attention_check"])
       expect(json).not.toContain(key);
+    expect(json).not.toMatch(/wrong_number|wrong_entity|wrong_date|invented_citation/);
     const [first] = await sql`select served_at from session_items where session_id=${s.sessionId} and position=1`;
     await get(s.sessionId, 1);
     const [again] = await sql`select served_at from session_items where session_id=${s.sessionId} and position=1`;
@@ -92,6 +93,9 @@ for (const condition of ["paired", "single"] as const) {
       expect(reveal.isCorrect).toBe(correct);
       expect(reveal.score).toBe(expected);
       expect(reveal.fabricatedAnswer).toContain(reveal.fabricatedSpan);
+      // Only the post-guess reveal carries the real answer and the span the fake replaced.
+      expect(reveal.answerReal.replace(reveal.realSpan, reveal.fabricatedSpan)).toBe(reveal.fabricatedAnswer);
+      expect(JSON.stringify(reveal)).not.toContain("hallucination");
       if (condition === "single")
         expect(typeof reveal.wasFabricated).toBe("boolean");
 

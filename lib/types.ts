@@ -36,6 +36,9 @@ export interface Reveal {
   wasFabricated: Side | boolean;
   fabricatedAnswer: string;
   fabricatedSpan: string;
+  answerReal: string;
+  /** Null only for pairs retired before real spans existed. */
+  realSpan: string | null;
   explanation: string;
   sourceUrl: string | null;
   score: number;
