@@ -4,6 +4,7 @@ export type Judgment = "yes" | "no";
 export interface PairCandidate {
   id: string;
   category: string;
+  hallucination_type: string;
   is_attention_check: boolean;
   is_active: boolean;
 }
@@ -35,6 +36,9 @@ export interface Reveal {
   wasFabricated: Side | boolean;
   fabricatedAnswer: string;
   fabricatedSpan: string;
+  answerReal: string;
+  /** Null only for pairs retired before real spans existed. */
+  realSpan: string | null;
   explanation: string;
   sourceUrl: string | null;
   score: number;

@@ -6,7 +6,7 @@ This is a manual pre-deploy checklist, not an automatic deployment script. Use S
 
 - [ ] Run lint, typecheck, unit tests, database integration tests, and both-condition Playwright tests as described in the README.
 - [ ] Replace the placeholder study contact on About and Privacy.
-- [ ] Replace `[SAMPLE]` facts with Shravani's validated study dataset; include an active attention check, stable UUIDs, exact fabricated spans, sources, origin, and dataset version.
+- [ ] Replace `[SAMPLE]` facts with Shravani's validated study dataset; include an active attention check, stable UUIDs, exact fabricated and real spans, sources, origin, and dataset version.
 - [ ] Review the consent and publication wording for the intended study. Keep raw exports private; remove aliases and coarsen timestamps before sharing anonymized data.
 - [ ] Review `ROUND_LENGTH` and `TOO_FAST_MS` in `lib/constants.ts`. If round length is changed above 10, update the database constraints, schemas, and share bounds together. Bump the package version when behavior or study rules change.
 - [ ] Ensure `.env` files and `research/data/exports/` are absent from the Git index. Keep production credentials only in your local environment and Vercel's environment settings.
@@ -24,7 +24,7 @@ research/.venv/bin/python research/import_pairs.py path/to/validated_pairs.csv -
 research/.venv/bin/python research/import_pairs.py path/to/validated_pairs.csv
 ```
 
-Future migrations must be new files applied in order; never rewrite a migration already deployed. The sample CSV is suitable only for development or a clearly labeled pilot.
+Future migrations must be new files applied in order; never rewrite a migration already deployed. `202610310001_prefreeze.sql` deactivates every existing pair, because pairs from before `real_span` cannot be revised in place; import the dataset again (with new UUIDs for any pair a round has used) before playing. The sample CSV is suitable only for development or a clearly labeled pilot.
 
 ## Verify database access
 
@@ -63,13 +63,14 @@ Expected: RLS is true for all four tables; no policies; `security_invoker=true` 
 | --- | --- |
 | `DATABASE_URL` | Supabase transaction-pooler URL with SSL |
 | `APP_URL` | The canonical HTTPS URL of this deployment, for share metadata |
+| `STUDY_STATUS` | `open` only while the study is recruiting. Any other value, or unset, is closed free play: no consent or profile questions, a notice that answers are not used for research, and sessions excluded like pilots |
 | `NEXT_TELEMETRY_DISABLED` | `1`, also set by the package scripts |
 
 Do not set `TEST_DATABASE_URL` in production. Give previews a separate development database, or omit their database credentials. Never point test fixtures at production.
 
 3. Build with `pnpm build`. Do not enable Analytics, Speed Insights, monitoring integrations, cron, or other add-ons. The app has no LLM requests, email service, image CDN, or external font requests.
-4. After deployment, play `/play?pilot=1` in both random conditions. Check refresh, single-real reveal, confidence, keyboard controls, mobile layout, and `/share?score=8&total=10` including its image. Verify no labels appear in item-network responses before submission. Pilot rounds must be absent from public totals and the leaderboard.
-5. Replace the README demo link once the owner is ready to recruit. Monitor free-plan usage manually in the provider dashboards. If a free limit is reached, pause recruitment; do not add a payment method or auto-upgrade.
+4. After deployment, with `STUDY_STATUS=open`, play `/play?pilot=1` in both random conditions. Check refresh, single-real reveal, confidence, keyboard controls, mobile layout, and `/share?score=8&total=10` including its image. Verify no labels appear in item-network responses before submission. Pilot rounds must be absent from public totals and the leaderboard.
+5. Replace the README demo link once the owner is ready to recruit. When recruitment ends, set `STUDY_STATUS=closed` (or remove it) and redeploy so the change takes effect; later visitors can still play without adding study data. Monitor free-plan usage manually in the provider dashboards. If a free limit is reached, pause recruitment; do not add a payment method or auto-upgrade.
 
 ## Resume a paused Supabase project
 

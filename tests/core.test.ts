@@ -2,7 +2,7 @@ import { expect, test } from "vitest";
 import { buildRound } from "@/lib/round-builder";
 import { isCorrect, scoreGuesses } from "@/lib/scoring";
 import { sessionSchema, guessSchema, nicknameSchema } from "@/lib/schemas";
-const pairs = Array.from({ length: 15 }, (_, i) => ({ id: String(i), category: "science", is_active: true, is_attention_check: false }));
+const pairs = Array.from({ length: 15 }, (_, i) => ({ id: String(i), category: "science", hallucination_type: "wrong_number", is_active: true, is_attention_check: false }));
 test("paired rounds are unique, bounded, and accommodate scarcity", () => {
   const r = buildRound(pairs, [], "paired");
   expect(r).toHaveLength(9);
@@ -21,9 +21,11 @@ test("nickname validation", () => {
   for (const name of ["a", "x".repeat(21), "<script>", "fuck", "   "])
     expect(nicknameSchema.safeParse(name).success).toBe(false);
 });
-test("schemas require consent and reject scores and malformed choices", () => {
+test("schemas pair consent with age and reject scores and malformed choices", () => {
   expect(sessionSchema.safeParse({ consent: true, ageConfirmed: true }).success).toBe(true);
-  for (const value of [{ consent: false, ageConfirmed: true }, { consent: true }, { consent: true, ageConfirmed: true, condition: "paired" }])
+  // Closed free play sends no consent; study mode requires it server-side.
+  expect(sessionSchema.safeParse({}).success).toBe(true);
+  for (const value of [{ consent: false, ageConfirmed: true }, { consent: true }, { consent: true, ageConfirmed: true, condition: "paired" }, { consent: true, ageConfirmed: true, deviceId: "not-a-uuid" }])
     expect(sessionSchema.safeParse(value).success).toBe(false);
   const g = { sessionId: "00000000-0000-4000-8000-000000000001", position: 1, chosenSide: "left", confidence: 3, responseTimeMs: 2000 };
   expect(guessSchema.safeParse(g).success).toBe(true);

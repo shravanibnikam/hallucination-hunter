@@ -1,13 +1,18 @@
-"""CSV validation checks; no database credentials needed."""
+"""CSV validation and export-query checks; no database credentials needed."""
 import csv
 import importlib.util
+import io
 from pathlib import Path
+from types import SimpleNamespace
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location('import_pairs', ROOT / 'research' / 'import_pairs.py')
 module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
+export_spec = importlib.util.spec_from_file_location('export_data', ROOT / 'research' / 'export_data.py')
+export = importlib.util.module_from_spec(export_spec)
+export_spec.loader.exec_module(export)
 
 
 class ImportValidation(unittest.TestCase):
@@ -30,6 +35,19 @@ class ImportValidation(unittest.TestCase):
     def test_exact_span(self):
         self.assertTrue(module.validate({**self.row, 'fabricated_span': 'FOUR'})[1])
 
+    def test_real_span(self):
+        self.assertEqual(module.validate({**self.row, 'real_span': 'three'})[1], [])
+        cases = {
+            'missing': ({'real_span': ''}, 'real_span: required'),
+            'twice': ({'answer_real': 'A triangle has three sides, three corners.', 'answer_fake': 'A triangle has four sides, three corners.'}, 'real_span: must appear exactly once in answer_real'),
+            'overlapping': ({'answer_real': 'Code aaa.', 'answer_fake': 'Code ba.', 'fabricated_span': 'b', 'real_span': 'aa'}, 'real_span: must appear exactly once in answer_real'),
+            'equal': ({'answer_real': 'A triangle has four sides.', 'real_span': 'four'}, 'real_span: must differ from fabricated_span'),
+            'differs elsewhere': ({'answer_fake': 'A triangle has four edges.', 'fabricated_span': 'four'}, 'answer_fake: must equal answer_real with real_span replaced by fabricated_span'),
+        }
+        for name, (change, error) in cases.items():
+            with self.subTest(name):
+                self.assertIn(error, module.validate({**self.row, **change})[1])
+
     def test_urls(self):
         for url in ['javascript:alert(1)', 'https://', 'http://a b.com', 'https://user:pass@example.com', 'https://example.com:bad', 'https://exa<mple.com', 'https://example.com/\x00']:
             with self.subTest(url=url):
@@ -46,6 +64,35 @@ class ImportValidation(unittest.TestCase):
         self.assertFalse(result['is_attention_check'])
         self.assertIsNone(result['source_url'])
         self.assertTrue(module.validate({**self.row, 'id': 'bad'})[1])
+
+
+class ExportColumns(unittest.TestCase):
+    def test_analysis_columns(self):
+        # Item position (1-10, by schema constraint) and the repeat-play and study flags travel with every guess.
+        for column in ('i.position', 's.is_study', 's.is_pilot', 's.device_id', 'r.device_round_number'):
+            with self.subTest(column=column):
+                self.assertIn(column, export.QUERY)
+        self.assertIn('(%s or not s.is_pilot) and (%s or s.is_study)', export.QUERY)
+
+    def test_integer_columns_raw_csv(self):
+        int2, int4, int8, boolean, text = 21, 23, 20, 16, 25
+        description = [SimpleNamespace(name=name, type_code=oid) for name, oid in [('final_score', int2), ('best_streak', int2), ('ai_knowledge_rating', int2), ('response_time_ms', int4), ('position', int2), ('device_round_number', int8), ('is_study', boolean), ('nickname', text)]]
+        rows = [(8, 3, None, 2000, 1, 1, True, 'Hunter'), (None, None, 4, 0, 10, None, False, None), (10, 10, 5, 600000, 7, 2 ** 53 + 1, True, '8')]
+        output = io.StringIO()
+        export.write_rows(output, description, rows, True)
+        self.assertEqual(output.getvalue().splitlines(), [
+            'final_score,best_streak,ai_knowledge_rating,response_time_ms,position,device_round_number,is_study,nickname',
+            '8,3,,2000,1,1,True,Hunter',
+            ',,4,0,10,,False,',
+            '10,10,5,600000,7,9007199254740993,True,8',
+        ])
+        # A later chunk that is entirely null in a column still writes empty fields, without a header.
+        output = io.StringIO()
+        export.write_rows(output, description, rows[1:2], False)
+        self.assertEqual(output.getvalue(), ',,4,0,10,,False,\n')
+        output = io.StringIO()
+        export.write_rows(output, description, [], True)
+        self.assertEqual(output.getvalue().splitlines(), ['final_score,best_streak,ai_knowledge_rating,response_time_ms,position,device_round_number,is_study,nickname'])
 
 
 if __name__ == '__main__':

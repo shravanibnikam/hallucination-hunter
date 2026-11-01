@@ -8,7 +8,7 @@ import sys
 from urllib.parse import urlsplit
 from uuid import UUID
 
-REQUIRED = ('id', 'question', 'category', 'answer_real', 'answer_fake', 'fabricated_span', 'hallucination_type', 'explanation', 'origin', 'dataset_version')
+REQUIRED = ('id', 'question', 'category', 'answer_real', 'answer_fake', 'fabricated_span', 'real_span', 'hallucination_type', 'explanation', 'origin', 'dataset_version')
 COLUMNS = (*REQUIRED, 'source_url', 'model_name', 'is_attention_check', 'is_active')
 TYPES = {'wrong_number', 'wrong_entity', 'wrong_date', 'invented_citation', 'other'}
 
@@ -17,7 +17,7 @@ def validate(row):
     errors = [f'{key}: required' for key in REQUIRED if not row.get(key, '').strip()]
     result = {key: row.get(key, '').strip() for key in COLUMNS}
     # Exact answer/span text is preserved, rather than normalizing research content.
-    for key in ('answer_real', 'answer_fake', 'fabricated_span'):
+    for key in ('answer_real', 'answer_fake', 'fabricated_span', 'real_span'):
         result[key] = row.get(key, '')
     try:
         result['id'] = str(UUID(result['id']))
@@ -29,6 +29,16 @@ def validate(row):
         errors.append('origin: invalid value')
     if not result['fabricated_span'] or result['fabricated_span'] not in result['answer_fake']:
         errors.append('fabricated_span: must be an exact nonempty substring of answer_fake')
+    # A fake is the real answer with exactly one span swapped; mirrors pairs_real_span_check.
+    real, real_span = result['answer_real'], result['real_span']
+    first = real.find(real_span) if real_span else -1
+    unique = first >= 0 and real.find(real_span, first + 1) < 0
+    if real_span and not unique:
+        errors.append('real_span: must appear exactly once in answer_real')
+    if real_span and real_span == result['fabricated_span']:
+        errors.append('real_span: must differ from fabricated_span')
+    elif unique and real[:first] + result['fabricated_span'] + real[first + len(real_span):] != result['answer_fake']:
+        errors.append('answer_fake: must equal answer_real with real_span replaced by fabricated_span')
     for key, default in (('is_attention_check', False), ('is_active', True)):
         raw = result[key].lower()
         if raw not in {'', 'true', 'false', '1', '0'}:

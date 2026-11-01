@@ -15,6 +15,8 @@ const url = process.env.TEST_DATABASE_URL;
 if (!url || !new URL(url).pathname.endsWith("_test"))
   throw new Error("Set TEST_DATABASE_URL to a disposable database whose name ends in _test; never use production.");
 process.env.DATABASE_URL = url;
+// Study mode unless a test switches it off; it is read on every request.
+process.env.STUDY_STATUS = "open";
 const sql = postgres(url, { max: 3, prepare: false });
 const request = (data: unknown, method = "POST") => new Request("http://local/api", { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
 const context = (id: string) => ({ params: Promise.resolve({ id }) });
@@ -42,7 +44,7 @@ async function answer(s: SessionInfo, position: number, correct = true, ms = 200
 beforeAll(async () => {
   await sql`truncate guesses,session_items,sessions,pairs`;
   for (let i = 1; i <= 14; i++)
-    await sql`insert into pairs(question,category,answer_real,answer_fake,fabricated_span,hallucination_type,explanation,origin,is_attention_check,dataset_version) values (${`[SAMPLE] Fixture ${i}: is two plus two four?`},${["science", "history", "geography"][i % 3]},'Two plus two is four.','Two plus two is five.','five','wrong_number','Two plus two is four.','synthetic',${i > 12},'test-v0')`;
+    await sql`insert into pairs(question,category,answer_real,answer_fake,fabricated_span,real_span,hallucination_type,explanation,origin,is_attention_check,dataset_version) values (${`[SAMPLE] Fixture ${i}: is two plus two four?`},${["science", "history", "geography"][i % 3]},'Two plus two is four.','Two plus two is five.','five','four',${["wrong_number", "wrong_entity", "wrong_date", "invented_citation"][i % 4]},'Two plus two is four.','synthetic',${i > 12},'test-v0')`;
 });
 beforeEach(async () => {
   await sql`truncate guesses,session_items,sessions`;
@@ -60,8 +62,9 @@ for (const condition of ["paired", "single"] as const) {
     expect(Object.keys(payload).sort()).toEqual(["category", "display", "position", "question", "totalItems"]);
     expect(Object.keys(payload.display).sort()).toEqual(condition === "paired" ? ["left", "right"] : ["answer"]);
     const json = JSON.stringify(payload);
-    for (const key of ["answer_real", "answer_fake", "fabricated_span", "explanation", "fake_shown_on", "shown_answer", "pair_id", "dataset_version", "is_attention_check"])
+    for (const key of ["answer_real", "answer_fake", "fabricated_span", "real_span", "hallucination_type", "answerReal", "realSpan", "fabricatedSpan", "hallucinationType", "explanation", "fake_shown_on", "shown_answer", "pair_id", "dataset_version", "is_attention_check"])
       expect(json).not.toContain(key);
+    expect(json).not.toMatch(/wrong_number|wrong_entity|wrong_date|invented_citation/);
     const [first] = await sql`select served_at from session_items where session_id=${s.sessionId} and position=1`;
     await get(s.sessionId, 1);
     const [again] = await sql`select served_at from session_items where session_id=${s.sessionId} and position=1`;
@@ -92,6 +95,9 @@ for (const condition of ["paired", "single"] as const) {
       expect(reveal.isCorrect).toBe(correct);
       expect(reveal.score).toBe(expected);
       expect(reveal.fabricatedAnswer).toContain(reveal.fabricatedSpan);
+      // Only the post-guess reveal carries the real answer and the span the fake replaced.
+      expect(reveal.answerReal.replace(reveal.realSpan, reveal.fabricatedSpan)).toBe(reveal.fabricatedAnswer);
+      expect(JSON.stringify(reveal)).not.toContain("hallucination");
       if (condition === "single")
         expect(typeof reveal.wasFabricated).toBe("boolean");
 
@@ -114,6 +120,8 @@ for (const condition of ["paired", "single"] as const) {
 }
 test("invalid consent, client scores, malformed IDs, and wrong-condition choices fail", async () => {
   expect((await create(request({ consent: false, ageConfirmed: true }))).status).toBe(400);
+  for (const missing of [{}, { consent: true }])
+    expect((await create(request(missing))).status).toBe(400);
   const s = await session();
   await get(s.sessionId, 1);
   for (const extra of [{ judgment: "yes" }, { chosenSide: "left", score: 10 }])
@@ -122,6 +130,20 @@ test("invalid consent, client scores, malformed IDs, and wrong-condition choices
   expect((await get("00000000-0000-4000-8000-000000000999", 1)).status).toBe(404);
   const other = await session();
   expect((await guess(request({ sessionId: other.sessionId, position: 1, chosenSide: "left", confidence: 2, responseTimeMs: 2000 }))).status).toBe(409);
+});
+test("device IDs are validated, stored, and never returned", async () => {
+  const deviceId = "6f1c1d5e-8a4b-4c3d-9e2f-0a1b2c3d4e5f";
+  const response = await create(request({ consent: true, ageConfirmed: true, deviceId }));
+  expect(response.status).toBe(201);
+  const s = await response.json() as SessionInfo;
+  expect(JSON.stringify(s)).not.toContain(deviceId);
+  const [stored] = await sql`select device_id from sessions where id=${s.sessionId}`;
+  expect(stored.device_id).toBe(deviceId);
+  expect(JSON.stringify(await (await resume(new Request("http://local"), context(s.sessionId))).json())).not.toContain(deviceId);
+  expect((await create(request({ consent: true, ageConfirmed: true, deviceId: "not-a-uuid" }))).status).toBe(400);
+  const anonymous = await (await create(request({ consent: true, ageConfirmed: true, deviceId: null }))).json() as SessionInfo;
+  const [none] = await sql`select device_id from sessions where id=${anonymous.sessionId}`;
+  expect(none.device_id).toBeNull();
 });
 test("timing is clamped and fast responses are flagged", async () => {
   const s = await session();
@@ -163,8 +185,37 @@ test("pilot guesses do not affect exposure or public totals and leaderboards exc
   expect(await summary.json()).toEqual({ totalParticipants: 3, totalJudgments: 30 });
   const [total] = await sql`select sum(judgment_count)::int as n from pair_exposure_counts`;
   expect(total.n).toBe(30);
-  const [stored] = await sql`select is_pilot from sessions where id=${pilot.sessionId}`;
-  expect(stored.is_pilot).toBe(true);
+  const [stored] = await sql`select is_pilot, is_study from sessions where id=${pilot.sessionId}`;
+  expect(stored).toEqual({ is_pilot: true, is_study: true });
+  const [study] = await sql`select is_pilot, is_study, consent_given_at is not null as consented from sessions where id=${normal.sessionId}`;
+  expect(study).toEqual({ is_pilot: false, is_study: true, consented: true });
+});
+test("unless STUDY_STATUS is exactly open, sessions skip consent, are not study data, and stay off public results", async () => {
+  try {
+    for (const status of [undefined, "true", "OPEN", " open", "closed"]) {
+      if (status === undefined)
+        delete process.env.STUDY_STATUS;
+      else
+        process.env.STUDY_STATUS = status;
+      expect((await create(request({}))).status).toBe(201);
+    }
+    delete process.env.STUDY_STATUS;
+    const s = await session("paired", { nickname: "Closed Hunter" });
+    for (let i = 1; i <= s.totalItems; i++)
+      expect((await answer(s, i)).status).toBe(200);
+    expect((await complete(request({}), context(s.sessionId))).status).toBe(200);
+    const rows = await sql`select is_study, is_pilot, consent_given_at, age_confirmed from sessions`;
+    expect(rows).toHaveLength(6);
+    expect(rows.every(r => !r.is_study && !r.is_pilot && r.consent_given_at === null && r.age_confirmed === null)).toBe(true);
+    expect(await (await leaderboard()).json()).toEqual([]);
+    expect(await (await stats()).json()).toEqual({ totalParticipants: 0, totalJudgments: 0 });
+    const [exposure] = await sql`select sum(judgment_count)::int as n from pair_exposure_counts`;
+    expect(exposure.n).toBe(0);
+  } finally {
+    process.env.STUDY_STATUS = "open";
+  }
+  // The database refuses a study session without recorded consent.
+  await expect(sql`insert into sessions (condition, total_items, is_study, app_version) values ('paired', 1, true, 'test')`).rejects.toThrow("sessions_study_consent_check");
 });
 test("assigned facts cannot be edited, but can be deactivated", async () => {
   const s = await session();
@@ -172,6 +223,13 @@ test("assigned facts cannot be edited, but can be deactivated", async () => {
   await expect(sql`update pairs set answer_real='Changed' where id=${i.pair_id}`).rejects.toThrow("immutable");
   await sql`update pairs set is_active=false where id=${i.pair_id}`;
   await sql`update pairs set is_active=true where id=${i.pair_id}`;
+});
+test("the database rejects fakes that are not a single swap of real_span", async () => {
+  const insert = (real: string, fake: string, fabricated: string, realSpan: string | null) => sql`insert into pairs(question,category,answer_real,answer_fake,fabricated_span,real_span,hallucination_type,explanation,origin,dataset_version) values ('[SAMPLE] Q','science',${real},${fake},${fabricated},${realSpan},'wrong_number','E','synthetic','test-v0')`;
+  for (const [real, fake, fabricated, realSpan] of [["Four is four.", "Five is four.", "Five", "four"], ["Two is four.", "Two is four.", "four", "four"], ["Two is four.", "Two was five.", "five", "four"], ["Two is four.", "Two is five.", "five", null], ["Code aaa.", "Code ba.", "b", "aa"]] as const)
+    await expect(insert(real, fake, fabricated, realSpan)).rejects.toThrow("pairs_real_span_check");
+  await insert("Two is four.", "Two is five.", "five", "four");
+  await sql`delete from pairs where question='[SAMPLE] Q'`;
 });
 test("RLS is enabled with zero public policies and invoker-safe exposure view", async () => {
   const tables = await sql`select relname,relrowsecurity from pg_class where oid in ('pairs'::regclass,'sessions'::regclass,'session_items'::regclass,'guesses'::regclass)`;
