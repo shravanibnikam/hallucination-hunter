@@ -94,8 +94,24 @@ test("single attention checks always fake; inactive and duplicate pairs excluded
   const r = buildRound([...ordinary, ordinary[0], check, { ...check, id: "inactive", is_active: false }], [], "single", () => .99);
   expect(r.find(i => i.pairId === "check")?.shownAnswer).toBe("fake");
   expect(r.every(i => i.fakeShownOn === null)).toBe(true);
-  expect(r.filter(i => i.pairId !== "check").every(i => i.shownAnswer === "real")).toBe(true);
+  expect(r.filter(i => i.pairId !== "check" && i.shownAnswer === "fake")).toHaveLength(4);
   expect(r.some(i => i.pairId === "inactive")).toBe(false);
+});
+test("single rounds show the fake on 4 or 5 of the 9 ordinary items, at random positions", () => {
+  const sizes = new Map<number, number>(), fakePositions = new Set<number>();
+  for (let seed = 0; seed < 1000; seed++) {
+    const round = buildRound([...ordinary, check], [], "single", seeded(seed));
+    const regular = round.filter(i => i.pairId !== "check");
+    expect(regular).toHaveLength(9);
+    const fakes = regular.filter(i => i.shownAnswer === "fake");
+    expect([4, 5]).toContain(fakes.length);
+    expect(round.find(i => i.pairId === "check")?.shownAnswer).toBe("fake");
+    sizes.set(fakes.length, (sizes.get(fakes.length) ?? 0) + 1);
+    fakes.forEach(i => fakePositions.add(i.position));
+  }
+  expect(Math.min(sizes.get(4) ?? 0, sizes.get(5) ?? 0)).toBeGreaterThan(400);
+  expect(fakePositions.size).toBe(10);
+  expect(buildRound([...ordinary, check], [], "paired", seeded(3)).every(i => i.shownAnswer === null)).toBe(true);
 });
 test("missing attention check shortens round", () => {
   expect(buildRound(ordinary, [], "paired")).toHaveLength(9);

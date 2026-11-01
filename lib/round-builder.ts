@@ -94,7 +94,9 @@ export function buildRound(pairs: PairCandidate[], counts: Exposure[], condition
 
   }
   const ordered = shuffle(selected, random);
+  // Single rounds show the fake on half of the ordinary items (4 or 5 of 9, chosen per round) at random positions.
+  const fakes = new Set(shuffle(ordered, random).slice(0, Math.floor(ordered.length / 2) + (ordered.length % 2 && random() < .5 ? 1 : 0)).map(p => p.id));
   if (checks.length)
     ordered.splice(Math.floor(random() * (ordered.length + 1)), 0, checks[Math.floor(random() * checks.length)]);
-  return ordered.map((p, i) => ({ pairId: p.id, position: i + 1, fakeShownOn: condition === "paired" ? (random() < .5 ? "left" : "right") : null, shownAnswer: condition === "single" ? (p.is_attention_check || random() < .5 ? "fake" : "real") : null }));
+  return ordered.map((p, i) => ({ pairId: p.id, position: i + 1, fakeShownOn: condition === "paired" ? (random() < .5 ? "left" : "right") : null, shownAnswer: condition === "single" ? (p.is_attention_check || fakes.has(p.id) ? "fake" : "real") : null }));
 }
