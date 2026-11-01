@@ -118,7 +118,7 @@ Each of the 3 replacements replaces only that one occurrence of `real_span`, and
 
 For every type except citations, the first passing replacement is the main fake and up to two more become alternates. Citations get two asks of 3 replacements, with seeds `20261101` and `20261102` (6 replacements), and the passing title closest in character length to the real one becomes the main fake, with the next closest as alternates, so length gives as little away as possible. The `seed` column of the attempts log records which ask produced each replacement.
 
-`--types` and `--ids` regenerate a subset and keep every other row as it is; because each candidate's seed is reset, the subset matches what a full run produces.
+`--types` and `--ids` regenerate a subset and keep every other row as it is. A subset run reuses a different llama.cpp prompt cache than a full run, so its sampling can differ slightly; the committed attempts log is the record. `--rejudge ID...` re-checks the logged replies of those rows against their current `answer_real` without running the model, which is how rewritten answers keep their fakes (stage 4). For a rewritten row, generation always prompts with the answer the model first saw (`answer_real_before` in `claims_v1.csv`).
 
 Outputs:
 
@@ -162,6 +162,8 @@ cd research/dataset_generation
 `flags` gathers everything worth a second look: `length_ratio_…` (the fake is much shorter or longer than the real span, a possible tell), the same for an alternate (`alt2:…`, `alt3:…`), `crossref_year_…` (the cited year is one off Crossref's), and `claim_wrong` or `claim_unverified` from the fact check below.
 
 `research/data/claims_v1.csv` is an advisory fact check of every other claim in each real answer (dates, co-authors, superlatives), since stage 1 verifies only `real_span`. Four Claude subagents (`claude-opus-5-5`, one per type) read the stage 1 revision of each cited article, the Crossref record for citations, and other English Wikipedia pages, and recorded `ok`, `wrong` (a source contradicts the claim) or `unverified`, with the claim and a short quote as evidence. Treat it as a pointer for the hand check, not a verdict.
+
+Review rows flagged `wrong` or `unverified` were rewritten to fix the flagged claim using only facts confirmed in each row's own source (the cited Wikipedia article, or the Crossref record for citations), keeping `real_span` and the 25 to 60 word rule. `claims_v1.csv` logs each rewrite in `answer_real_before` and `answer_real_after`; their fakes were rebuilt with `make_fakes.py --rejudge` from the same logged replies, and a fresh fact check of the new answers is in `recheck_verdict`, `recheck_claim` and `recheck_evidence`. Flags follow the recheck when there is one.
 
 ## Attention checks
 

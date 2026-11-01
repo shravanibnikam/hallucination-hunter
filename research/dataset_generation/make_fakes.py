@@ -37,6 +37,7 @@ CANDIDATES = common.DATA / "candidates_v1.csv"
 SOURCES = common.DATA / "sources_v1.csv"
 FAKES = common.DATA / "fakes_v1.csv"
 FAILED = common.DATA / "fakes_v1_failed.csv"
+CLAIMS = common.DATA / "claims_v1.csv"
 ATTEMPTS = common.DATA / "fakes_v1_attempts.csv"
 FAKE_FIELDS = (
     "id",
@@ -223,6 +224,12 @@ def punctuation(text):
     return [c for c in text if unicodedata.category(c).startswith("P")]
 
 
+def original_answers():
+    """Answers rewritten after the fact check, keyed by id: generation keeps the answer the model first saw, and every
+    check runs against the rewritten answer."""
+    return {c["id"]: c["answer_real_before"] for c in common.read_csv(CLAIMS) if c.get("answer_real_before")} if CLAIMS.exists() else {}
+
+
 def seeds(row):
     return CITATION_SEEDS if row["hallucination_type"] == "invented_citation" else (SEED,)
 
@@ -333,21 +340,15 @@ def evaluate(row, source, replacements, asked_with=(), **lookups):
     return logged, fake_row, None
 
 
-def main(argv=None):
+def generate(rows, sources):
+    """Ask the model (once, or twice for citations) and check the replies as they arrive."""
     from concurrent.futures import ThreadPoolExecutor
 
     from llama_cpp import Llama
 
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--types", nargs="+", choices=common.TYPES, help="regenerate only these types; other rows are kept as they are")
-    parser.add_argument("--ids", nargs="+", help="regenerate only these candidate ids; other rows are kept as they are")
-    args = parser.parse_args(argv)
     ensure_model()
-    sources = {s["id"]: s for s in common.read_csv(SOURCES) if s["status"] == "pass"}
-    passing = [r for r in common.read_csv(CANDIDATES) if r["id"] in sources]
-    # Each candidate's seed is reset, so regenerating a subset gives the same replies a full run would.
-    rows = [r for r in passing if (not args.types or r["hallucination_type"] in args.types) and (not args.ids or r["id"] in args.ids)]
     llm = Llama(str(MODEL_PATH), n_ctx=2048, n_threads=N_THREADS, n_gpu_layers=0, seed=SEED, verbose=False)
+    original = original_answers()
     # Generation stays sequential on the CPU; source fetches and checks overlap with it in a few polite threads.
     with ThreadPoolExecutor(max_workers=4) as pool:
         kinds = dict(zip((r["id"] for r in rows), pool.map(lambda r: entity_kind(r["real_span"]) if r["hallucination_type"] == "wrong_entity" else "thing", rows)))
@@ -355,16 +356,45 @@ def main(argv=None):
         for number, row in enumerate(rows, 1):
             asked = []
             for seed in seeds(row):
-                reply = llm.create_chat_completion(messages=[{"role": "user", "content": prompt(row, kinds[row["id"]])}], temperature=TEMPERATURE, top_p=TOP_P, max_tokens=MAX_TOKENS, seed=seed, response_format={"type": "json_object", "schema": SCHEMA})
+                shown = {**row, "answer_real": original.get(row["id"], row["answer_real"])}
+                reply = llm.create_chat_completion(messages=[{"role": "user", "content": prompt(shown, kinds[row["id"]])}], temperature=TEMPERATURE, top_p=TOP_P, max_tokens=MAX_TOKENS, seed=seed, response_format={"type": "json_object", "schema": SCHEMA})
                 for text in parse_replacements(reply["choices"][0]["message"]["content"]):
                     if text.casefold() not in (t.casefold() for t, _ in asked):
                         asked.append((text, seed))
             jobs.append(pool.submit(evaluate, row, sources[row["id"]], [t for t, _ in asked], [s for _, s in asked]))
             print(f"{number}/{len(rows)} generated", flush=True)
-        results = [job.result() for job in jobs]
+        return [job.result() for job in jobs]
+
+
+def rejudge(rows, sources):
+    """Re-check each row's logged replies, with their original order and seeds, against its current answer_real; no model."""
+    logged = collections.defaultdict(list)
+    for a in common.read_csv(ATTEMPTS):
+        if a["replacement"]:
+            logged[a["id"]].append(a)
+    results = []
+    for row in rows:
+        replies = sorted(logged[row["id"]], key=lambda a: int(a["rank"]))
+        results.append(evaluate(row, sources[row["id"]], [a["replacement"] for a in replies], [int(a.get("seed") or SEED) for a in replies]))
+    return results
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--types", nargs="+", choices=common.TYPES, help="regenerate only these types; other rows are kept as they are")
+    parser.add_argument("--ids", nargs="+", help="regenerate only these candidate ids; other rows are kept as they are")
+    parser.add_argument("--rejudge", nargs="+", metavar="ID", help="re-check these ids' logged replies against their current answer_real, without the model")
+    args = parser.parse_args(argv)
+    sources = {s["id"]: s for s in common.read_csv(SOURCES) if s["status"] == "pass"}
+    passing = [r for r in common.read_csv(CANDIDATES) if r["id"] in sources]
+    chosen = set(args.ids or []) | set(args.rejudge or [])
+    rows = [r for r in passing if (not args.types or r["hallucination_type"] in args.types) and (not chosen or r["id"] in chosen)]
+    # A subset run reuses a different prompt cache than a full run, so its sampling can differ: the attempts log is the record.
+    results = rejudge(rows, sources) if args.rejudge else generate(rows, sources)
+    partial = bool(args.types or chosen)
     order = {r["id"]: n for n, r in enumerate(passing)}
     redone = {r["id"] for r in rows}
-    kept = lambda path: [{"seed": str(SEED), **r} for r in common.read_csv(path) if r["id"] in order and r["id"] not in redone] if (args.types or args.ids) and path.exists() else []
+    kept = lambda path: [{"seed": str(SEED), **r} for r in common.read_csv(path) if r["id"] in order and r["id"] not in redone] if partial and path.exists() else []
     attempts = sorted(kept(ATTEMPTS) + [a for logged, _, _ in results for a in logged], key=lambda a: (order[a["id"]], int(a["rank"])))
     fakes = sorted(kept(FAKES) + [fake for _, fake, _ in results if fake], key=lambda r: order[r["id"]])
     failed = sorted(kept(FAILED) + [fail for _, _, fail in results if fail], key=lambda r: order[r["id"]])
@@ -374,9 +404,8 @@ def main(argv=None):
     counts = collections.Counter((f["hallucination_type"], f["category"]) for f in fakes)
     for kind in common.TYPES:
         print(f"{kind:18}", "  ".join(f"{c} {counts[kind, c]}" for c in common.CATEGORIES))
-    print(f"{len(fakes)} of {len(passing)} candidates have a passing fake ({len(rows)} regenerated); failures in {FAILED.name}")
+    print(f"{len(fakes)} of {len(passing)} candidates have a passing fake ({len(rows)} {'re-checked' if args.rejudge else 'regenerated'}); failures in {FAILED.name}")
     return 0
-
 
 if __name__ == "__main__":
     sys.exit(main())

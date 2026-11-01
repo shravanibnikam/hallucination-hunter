@@ -34,7 +34,9 @@ FIELDS = (
 
 def review_rows(fakes, claims=()):
     """Answers whose other claims the fact check found wrong or unverified get a claim_wrong / claim_unverified flag."""
-    verdicts = {c["id"]: c["verdict"] for c in claims if c["verdict"] != "ok"}
+    # A recheck after a rewrite replaces the original verdict.
+    verdicts = {c["id"]: c.get("recheck_verdict") or c["verdict"] for c in claims}
+    verdicts = {i: v for i, v in verdicts.items() if v != "ok"}
     rows = []
     for row in fakes:
         flags = [f for f in row["flags"].split(";") if f] + ([f"claim_{verdicts[row['id']]}"] if row["id"] in verdicts else [])

@@ -372,6 +372,20 @@ class FakeChecks(unittest.TestCase):
         self.assertEqual(make_fakes.seeds(citation()), (20261101, 20261102))
         self.assertEqual(make_fakes.seeds(candidate()), (20261101,))
 
+    def test_rejudge_reuses_logged_replies_against_the_rewritten_answer(self):
+        import tempfile
+
+        row = candidate()
+        with tempfile.TemporaryDirectory() as folder:
+            attempts = Path(folder) / "attempts.csv"
+            common.write_csv(attempts, [{"id": row["id"], "rank": 2, "seed": 20261101, "replacement": "1,529"}, {"id": row["id"], "rank": 1, "seed": 20261101, "replacement": "1,547"}], ("id", "rank", "seed", "replacement"))
+            rewritten = {**row, "answer_real": REAL.replace("far higher than copper or tin", "well above that of copper")}
+            with mock.patch.object(make_fakes, "ATTEMPTS", attempts):
+                [(logged, fake, failed)] = make_fakes.rejudge([rewritten], {row["id"]: {"source_revision": "", "flags": ""}})
+        self.assertEqual([a["replacement"] for a in logged], ["1,547", "1,529"])
+        self.assertEqual(fake["answer_fake"], rewritten["answer_real"].replace("1,538", "1,547"))
+        self.assertEqual(fake["alt_fake_2"], "1,529")
+
     def test_closest_length_citation_is_main(self):
         row = citation(real_span="A Mathematical Theory of Communication", answer_real=CITED.replace("Molecular Structure of Nucleic Acids: A Structure for Deoxyribose Nucleic Acid", "A Mathematical Theory of Communication"))
         fakes = ["A Numerical Account of Transmissions", "A Statistical Theory of Signal Exchange", "A Mechanical Theory of Communicating"]
@@ -605,7 +619,7 @@ class ReviewSheet(unittest.TestCase):
 
     def test_sorted_with_empty_keep_notes_and_claim_flags(self):
         fakes = [self.fake("wrong_number", "science", "b"), self.fake("invented_citation", "history", "c", "length_ratio_1.50"), self.fake("wrong_number", "geography", "a")]
-        rows = make_review.review_rows(fakes, [{"id": "c", "verdict": "wrong"}, {"id": "a", "verdict": "ok"}])
+        rows = make_review.review_rows(fakes, [{"id": "c", "verdict": "wrong"}, {"id": "a", "verdict": "ok"}, {"id": "b", "verdict": "wrong", "recheck_verdict": "ok"}])
         self.assertEqual([r["question"] for r in rows], ["c", "a", "b"])
         self.assertEqual([r["flags"] for r in rows], ["length_ratio_1.50;claim_wrong", "", ""])
         self.assertEqual([r["length_diff"] for r in rows], [0, 0, 0])
