@@ -20,7 +20,7 @@ function deviceId() {
     return null;
   }
 }
-export function PlayGame() {
+export function PlayGame({ studyOpen }: { studyOpen: boolean }) {
   const [loading, setLoading] = useState(true);
 
   const [session, setSession] = useState<SessionInfo | null>(null);
@@ -66,9 +66,11 @@ export function PlayGame() {
     setBusy(true);
     setError("");
     try {
-      const s = await api<SessionInfo>("/api/sessions", { consent: true, ageConfirmed: true, ...data, pilot: new URLSearchParams(window.location.search).get("pilot") === "1", deviceType: window.innerWidth < 768 ? "mobile" : "desktop", deviceId: deviceId() });
+      const s = await api<SessionInfo>("/api/sessions", { ...studyOpen && { consent: true, ageConfirmed: true }, ...data, pilot: new URLSearchParams(window.location.search).get("pilot") === "1", deviceType: window.innerWidth < 768 ? "mobile" : "desktop", deviceId: deviceId() });
       sessionStorage.setItem("hunter-session", s.sessionId);
       setSession(s);
+      // Closed free play has no consent or profile step.
+      if (!studyOpen) setItem(await api<PublicItem>(`/api/sessions/${s.sessionId}/items/1`));
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -101,7 +103,10 @@ export function PlayGame() {
     }
   }
   if (loading) return <p role="status" className="narrow">Finding your place…</p>;
-  return <div className="play-shell">{error && <p className="error" role="alert">{error}</p>}{summary ? <EndScreen summary={summary} /> : item && session ? <GameItem key={item.position} item={item} session={session} streak={streak} next={next} busy={busy} onReveal={r => setStreak(r.currentStreak)} /> : session ? <Profile finish={finishProfile} busy={busy} /> : <Consent start={start} busy={busy} />}</div>;
+  return <div className="play-shell">{error && <p className="error" role="alert">{error}</p>}{summary ? <EndScreen summary={summary} /> : item && session ? <GameItem key={item.position} item={item} session={session} streak={streak} next={next} busy={busy} onReveal={r => setStreak(r.currentStreak)} /> : !studyOpen ? <Closed play={() => void (session ? finishProfile() : start({}))} busy={busy} /> : session ? <Profile finish={finishProfile} busy={busy} /> : <Consent start={start} busy={busy} />}</div>;
+}
+function Closed({ play, busy }: { play: () => void; busy: boolean }) {
+  return <section className="narrow"><p className="eyebrow">Free play</p><h1>Can you catch the AI lying?</h1><p className="panel" role="status">The study has ended. You can still play, but your answers will not be used for research.</p><button className="button primary full" onClick={play} disabled={busy}>{busy ? "Preparing your round…" : "Play"}<ArrowRight aria-hidden="true" /></button></section>;
 }
 function Consent({ start, busy }: { start: (data: { nickname?: string }) => Promise<void>; busy: boolean }) {
   const [age, setAge] = useState(false), [consent, setConsent] = useState(false), [nickname, setNickname] = useState("");

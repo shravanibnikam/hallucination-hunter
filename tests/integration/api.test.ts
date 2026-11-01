@@ -15,6 +15,8 @@ const url = process.env.TEST_DATABASE_URL;
 if (!url || !new URL(url).pathname.endsWith("_test"))
   throw new Error("Set TEST_DATABASE_URL to a disposable database whose name ends in _test; never use production.");
 process.env.DATABASE_URL = url;
+// Study mode unless a test switches it off; it is read on every request.
+process.env.STUDY_STATUS = "open";
 const sql = postgres(url, { max: 3, prepare: false });
 const request = (data: unknown, method = "POST") => new Request("http://local/api", { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
 const context = (id: string) => ({ params: Promise.resolve({ id }) });
@@ -118,6 +120,8 @@ for (const condition of ["paired", "single"] as const) {
 }
 test("invalid consent, client scores, malformed IDs, and wrong-condition choices fail", async () => {
   expect((await create(request({ consent: false, ageConfirmed: true }))).status).toBe(400);
+  for (const missing of [{}, { consent: true }])
+    expect((await create(request(missing))).status).toBe(400);
   const s = await session();
   await get(s.sessionId, 1);
   for (const extra of [{ judgment: "yes" }, { chosenSide: "left", score: 10 }])
@@ -181,8 +185,37 @@ test("pilot guesses do not affect exposure or public totals and leaderboards exc
   expect(await summary.json()).toEqual({ totalParticipants: 3, totalJudgments: 30 });
   const [total] = await sql`select sum(judgment_count)::int as n from pair_exposure_counts`;
   expect(total.n).toBe(30);
-  const [stored] = await sql`select is_pilot from sessions where id=${pilot.sessionId}`;
-  expect(stored.is_pilot).toBe(true);
+  const [stored] = await sql`select is_pilot, is_study from sessions where id=${pilot.sessionId}`;
+  expect(stored).toEqual({ is_pilot: true, is_study: true });
+  const [study] = await sql`select is_pilot, is_study, consent_given_at is not null as consented from sessions where id=${normal.sessionId}`;
+  expect(study).toEqual({ is_pilot: false, is_study: true, consented: true });
+});
+test("unless STUDY_STATUS is exactly open, sessions skip consent, are not study data, and stay off public results", async () => {
+  try {
+    for (const status of [undefined, "true", "OPEN", " open", "closed"]) {
+      if (status === undefined)
+        delete process.env.STUDY_STATUS;
+      else
+        process.env.STUDY_STATUS = status;
+      expect((await create(request({}))).status).toBe(201);
+    }
+    delete process.env.STUDY_STATUS;
+    const s = await session("paired", { nickname: "Closed Hunter" });
+    for (let i = 1; i <= s.totalItems; i++)
+      expect((await answer(s, i)).status).toBe(200);
+    expect((await complete(request({}), context(s.sessionId))).status).toBe(200);
+    const rows = await sql`select is_study, is_pilot, consent_given_at, age_confirmed from sessions`;
+    expect(rows).toHaveLength(6);
+    expect(rows.every(r => !r.is_study && !r.is_pilot && r.consent_given_at === null && r.age_confirmed === null)).toBe(true);
+    expect(await (await leaderboard()).json()).toEqual([]);
+    expect(await (await stats()).json()).toEqual({ totalParticipants: 0, totalJudgments: 0 });
+    const [exposure] = await sql`select sum(judgment_count)::int as n from pair_exposure_counts`;
+    expect(exposure.n).toBe(0);
+  } finally {
+    process.env.STUDY_STATUS = "open";
+  }
+  // The database refuses a study session without recorded consent.
+  await expect(sql`insert into sessions (condition, total_items, is_study, app_version) values ('paired', 1, true, 'test')`).rejects.toThrow("sessions_study_consent_check");
 });
 test("assigned facts cannot be edited, but can be deactivated", async () => {
   const s = await session();

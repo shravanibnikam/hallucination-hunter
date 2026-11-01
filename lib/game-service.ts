@@ -35,6 +35,8 @@ interface ItemRow {
   dataset_version: string;
   is_attention_check: boolean;
 }
+/** Study mode only on the exact value "open"; anything else, including unset, is closed free play. */
+export const studyOpen = () => process.env.STUDY_STATUS === "open";
 async function lockSession(tx: TransactionSql, id: string) {
   const [s] = await tx<SessionRow[]> `select id, condition, total_items, completed from sessions where id=${id} for update`;
   if (!s)
@@ -63,6 +65,9 @@ async function orderedGuesses(tx: TransactionSql, id: string) {
   }[]> `select g.is_correct, p.is_attention_check, g.confidence, p.category from guesses g join session_items i on i.id=g.session_item_id join pairs p on p.id=g.pair_id where g.session_id=${id} order by i.position`;
 }
 export async function createSession(input: z.infer<typeof sessionSchema>) {
+  const isStudy = studyOpen();
+  if (isStudy && !(input.consent && input.ageConfirmed))
+    throw new HttpError(400, "Please refresh the page and agree to take part before starting.");
   return db().begin(async (tx) => {
     const pairs = await tx<PairCandidate[]> `select id, category, hallucination_type, is_attention_check, is_active from pairs where is_active`;
     const counts = await tx<Exposure[]> `select pair_id, judgment_count from pair_exposure_counts`;
@@ -72,7 +77,7 @@ export async function createSession(input: z.infer<typeof sessionSchema>) {
       throw new HttpError(503, "The study is being prepared. Please come back soon.");
     const [s] = await tx<{
       id: string;
-    }[]> `insert into sessions (condition, consent_given_at, age_confirmed, nickname, device_type, device_id, total_items, is_pilot, app_version) values (${condition}, now(), true, ${input.nickname ?? null}, ${input.deviceType ?? null}, ${input.deviceId ?? null}, ${round.length}, ${input.pilot ?? false}, ${version}) returning id`;
+    }[]> `insert into sessions (condition, consent_given_at, age_confirmed, nickname, device_type, device_id, total_items, is_pilot, is_study, app_version) values (${condition}, case when ${isStudy} then now() end, ${isStudy || null}, ${input.nickname ?? null}, ${input.deviceType ?? null}, ${input.deviceId ?? null}, ${round.length}, ${input.pilot ?? false}, ${isStudy}, ${version}) returning id`;
     await tx`insert into session_items ${tx(round.map(i => ({ session_id: s.id, pair_id: i.pairId, position: i.position, fake_shown_on: i.fakeShownOn, shown_answer: i.shownAnswer })))}`;
     return { sessionId: s.id, condition, totalItems: round.length };
 

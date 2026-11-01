@@ -1,4 +1,8 @@
+import { connection } from "next/server";
 import { PlayGame } from "@/components/play-game";
-export default function PlayPage() {
-  return <PlayGame />;
+import { studyOpen } from "@/lib/game-service";
+export default async function PlayPage() {
+  // Read STUDY_STATUS per request, not at build time.
+  await connection();
+  return <PlayGame studyOpen={studyOpen()} />;
 }

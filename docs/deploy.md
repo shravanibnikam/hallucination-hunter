@@ -63,13 +63,14 @@ Expected: RLS is true for all four tables; no policies; `security_invoker=true` 
 | --- | --- |
 | `DATABASE_URL` | Supabase transaction-pooler URL with SSL |
 | `APP_URL` | The canonical HTTPS URL of this deployment, for share metadata |
+| `STUDY_STATUS` | `open` only while the study is recruiting. Any other value, or unset, is closed free play: no consent or profile questions, a notice that answers are not used for research, and sessions excluded like pilots |
 | `NEXT_TELEMETRY_DISABLED` | `1`, also set by the package scripts |
 
 Do not set `TEST_DATABASE_URL` in production. Give previews a separate development database, or omit their database credentials. Never point test fixtures at production.
 
 3. Build with `pnpm build`. Do not enable Analytics, Speed Insights, monitoring integrations, cron, or other add-ons. The app has no LLM requests, email service, image CDN, or external font requests.
-4. After deployment, play `/play?pilot=1` in both random conditions. Check refresh, single-real reveal, confidence, keyboard controls, mobile layout, and `/share?score=8&total=10` including its image. Verify no labels appear in item-network responses before submission. Pilot rounds must be absent from public totals and the leaderboard.
-5. Replace the README demo link once the owner is ready to recruit. Monitor free-plan usage manually in the provider dashboards. If a free limit is reached, pause recruitment; do not add a payment method or auto-upgrade.
+4. After deployment, with `STUDY_STATUS=open`, play `/play?pilot=1` in both random conditions. Check refresh, single-real reveal, confidence, keyboard controls, mobile layout, and `/share?score=8&total=10` including its image. Verify no labels appear in item-network responses before submission. Pilot rounds must be absent from public totals and the leaderboard.
+5. Replace the README demo link once the owner is ready to recruit. When recruitment ends, set `STUDY_STATUS=closed` (or remove it) and redeploy so the change takes effect; later visitors can still play without adding study data. Monitor free-plan usage manually in the provider dashboards. If a free limit is reached, pause recruitment; do not add a payment method or auto-upgrade.
 
 ## Resume a paused Supabase project
 

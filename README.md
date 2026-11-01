@@ -16,6 +16,8 @@ Screenshot placeholder — add an image after the research dataset and deploymen
 2. Your session is randomly assigned to **paired** answers (pick the fabrication) or a **single** answer (judge Yes / No). The round contains up to 10 items, including one attention check when available.
 3. Choose an answer, rate your confidence, then see the fabricated detail, explanation, and source. Finish for your score, streak, category accuracy, and confidence calibration.
 
+The study runs only while the server's `STUDY_STATUS` is exactly `open`. Otherwise `/play` skips consent and the profile, says the study has ended, and records non-study sessions that are excluded from totals, the leaderboard, exposure counts, and default exports, like pilots.
+
 Use A/B or Y/N to choose, 1–5 for confidence, and Enter to continue. Refreshing resumes the next unguessed item in the same tab. Add `?pilot=1` to `/play` for a pilot round, excluded from public totals, exposure counts, and default exports.
 
 ## Research questions
@@ -74,7 +76,7 @@ brew services start postgresql@17
 createdb hallucination_hunter
 ```
 
-On another platform, start your installed PostgreSQL server and create the same database using your configured database role. Set `DATABASE_URL` in `.env.local` to its connection URL (for the default Homebrew role, `postgresql://localhost/hallucination_hunter`). Set `APP_URL=http://localhost:3000`. You can instead use a dedicated Supabase Free development project with the connection details described in [deploy.md](docs/deploy.md). Never commit `.env.local`.
+On another platform, start your installed PostgreSQL server and create the same database using your configured database role. Set `DATABASE_URL` in `.env.local` to its connection URL (for the default Homebrew role, `postgresql://localhost/hallucination_hunter`). Set `APP_URL=http://localhost:3000`, and `STUDY_STATUS=open` to run the consent flow (unset means closed free play). You can instead use a dedicated Supabase Free development project with the connection details described in [deploy.md](docs/deploy.md). Never commit `.env.local`.
 
 The Python tools and `psql` read environment variables, not Next.js env files. For the trusted `.env.local` you just wrote, load it into your shell:
 
@@ -104,6 +106,7 @@ Database and browser tests require a **separate disposable database** whose name
 ```sh
 createdb hunter_test
 export TEST_DATABASE_URL='postgresql://localhost/hunter_test'
+export STUDY_STATUS=open
 pnpm test:prepare
 pnpm test:integration
 DATABASE_URL="$TEST_DATABASE_URL" research/.venv/bin/python research/import_pairs.py research/data/sample_pairs.csv --deactivate-missing
@@ -123,11 +126,12 @@ research/.venv/bin/python research/import_pairs.py path/to/pairs.csv
 research/.venv/bin/python research/import_pairs.py path/to/pairs.csv --deactivate-missing
 research/.venv/bin/python research/export_data.py
 research/.venv/bin/python research/export_data.py --include-pilot
+research/.venv/bin/python research/export_data.py --include-nonstudy
 ```
 
 Imports require stable UUIDs and validate required fields, enums, exact fabricated spans, and HTTP(S) URLs. Every pair, attention checks included, needs a `real_span` that appears exactly once in `answer_real` and differs from `fabricated_span`, and `answer_fake` must be `answer_real` with that one occurrence replaced by `fabricated_span`; a database check constraint enforces the same rule. Valid rows are upserted transactionally, invalid rows are reported with line numbers, and a nonzero status reports errors. Deactivation refuses invalid or empty files and never deletes data.
 
-Exports are timestamped CSVs in ignored `research/data/exports/`. They include incomplete sessions and quality flags (`completed`, `failed_attention_check`, `flagged_too_fast`), so exclusion choices remain explicit. `device_round_number` is 1 for a browser's first session by creation time, counting every session including pilot ones; it is empty without a `device_id`. Pilot guesses are excluded by default. Raw exports include optional aliases and precise timestamps: review and anonymize them before public release. The export script is data transport, not an analysis pipeline.
+Exports are timestamped CSVs in ignored `research/data/exports/`. They include incomplete sessions and quality flags (`completed`, `failed_attention_check`, `flagged_too_fast`), so exclusion choices remain explicit. `device_round_number` is 1 for a browser's first session by creation time, counting every session including pilot ones; it is empty without a `device_id`. Pilot guesses and non-study (closed free-play) guesses are excluded by default; `--include-pilot` and `--include-nonstudy` add them, and `is_pilot` and `is_study` keep them distinguishable. Raw exports include optional aliases and precise timestamps: review and anonymize them before public release. The export script is data transport, not an analysis pipeline.
 
 ## Project structure
 
