@@ -11,6 +11,7 @@ import artifact_check
 import check_sources
 import common
 import make_fakes
+import make_review
 
 ARTICLE = {
     "parse": {
@@ -560,6 +561,32 @@ class ArtifactCheck(unittest.TestCase):
         self.assertAlmostEqual(high, 0.5962, places=3)
 
 
+
+class ReviewSheet(unittest.TestCase):
+    def fake(self, kind, category, question, flags=""):
+        return {"id": question, "hallucination_type": kind, "category": category, "question": question, "answer_real": "r", "answer_fake": "f", "real_span": "r", "fabricated_span": "f", "alt_fake_2": "", "alt_fake_3": "", "source_url": "u", "flags": flags}
+
+    def test_sorted_with_empty_keep_notes_and_claim_flags(self):
+        fakes = [self.fake("wrong_number", "science", "b"), self.fake("invented_citation", "history", "c", "length_ratio_1.50"), self.fake("wrong_number", "geography", "a")]
+        rows = make_review.review_rows(fakes, [{"id": "c", "verdict": "wrong"}, {"id": "a", "verdict": "ok"}])
+        self.assertEqual([r["question"] for r in rows], ["c", "a", "b"])
+        self.assertEqual([r["flags"] for r in rows], ["length_ratio_1.50;claim_wrong", "", ""])
+        self.assertTrue(all(r["keep"] == r["notes"] == "" for r in rows))
+
+    def test_never_overwrites_hand_entries(self):
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as folder:
+            review, fakes = Path(folder) / "review.csv", Path(folder) / "fakes.csv"
+            common.write_csv(fakes, [self.fake("wrong_number", "science", "q")], make_fakes.FAKE_FIELDS)
+            with mock.patch.object(make_review, "REVIEW", review), mock.patch.object(make_review, "FAKES", fakes), mock.patch.object(make_review, "CLAIMS", Path(folder) / "none.csv"):
+                self.assertEqual(make_review.main(), 0)
+                rows = common.read_csv(review)
+                rows[0]["keep"] = "yes"
+                common.write_csv(review, rows, make_review.FIELDS)
+                with self.assertRaises(SystemExit):
+                    make_review.main()
+                self.assertEqual(common.read_csv(review)[0]["keep"], "yes")
 
 if __name__ == "__main__":
     unittest.main()

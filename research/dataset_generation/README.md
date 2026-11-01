@@ -4,6 +4,40 @@ Builds the v1 study dataset: 80 pairs, 20 of each `hallucination_type` (`wrong_n
 
 Everything here is Python, needs no API key, account or payment, and writes its data to `research/data/`.
 
+## Your hand check: `research/data/review_v1.csv`
+
+Open `research/data/review_v1.csv` (126 rows, sorted by `hallucination_type`, then `category`) and fill in `keep` on every row:
+
+| `keep` | Meaning |
+|---|---|
+| `yes` | Use the pair as shown (`answer_fake`, with `fabricated_span`). |
+| `alt2` | Use `alt_fake_2` instead: it replaces `real_span` in `answer_real` the same way. |
+| `alt3` | Use `alt_fake_3` instead. |
+| `no` | Drop the candidate. |
+
+Use `notes` for anything else, such as a correction to the real answer or a better explanation.
+
+**You need at least 20 rows marked `yes`, `alt2` or `alt3` in each `hallucination_type`** (80 in total), spread across `science`, `geography` and `history` as evenly as you can (7/7/6). Available rows:
+
+| Type | science | geography | history | Total |
+|---|---|---|---|---|
+| `wrong_number` | 11 | 10 | 7 | 28 |
+| `wrong_entity` | 13 | 6 | 6 | 25 |
+| `wrong_date` | 13 | 13 | 13 | 39 |
+| `invented_citation` | 12 | 9 | 13 | 34 |
+
+`wrong_entity` is the tightest: with 6 in geography and 6 in history, the best possible split is 8/6/6, and you can drop at most 5 entity rows.
+
+For each row, check that the real answer is right, that the fake is wrong but believable, and that nothing other than the span gives it away. `flags` points at rows worth a second look:
+
+- `claim_wrong` or `claim_unverified`: a fact check found a problem with another claim in the real answer. The claim and evidence are in `research/data/claims_v1.csv` (match on `id`). Fix the answer in `notes` or mark `no`.
+- `length_ratio_…`: the fake is much shorter or longer than the real span, a possible tell. `alt2:`/`alt3:` prefixes mean the same for an alternate.
+- `crossref_year_…`: the year in the answer is one off the year Crossref gives.
+
+Citation fakes run shorter than the real titles (stage 3 below), so prefer citation fakes or alternates close in length to the real title.
+
+Do not rerun `make_review.py` once you have started: it refuses to overwrite a sheet with entries, but your copy is the record. Nothing is selected or imported until the hand check is done.
+
 ## Setup
 
 From the repository root, with the research virtual environment described in the main README:
@@ -103,6 +137,19 @@ cd research/dataset_generation
 The result, with accuracy by type and the fitted coefficients, is written to `research/data/artifact_check_v1.json`.
 
 Result on the 126 candidates with a passing fake: accuracy 56.3%, 95% CI [47.6%, 64.7%], so the check **passes**. By type, the pooled model scores 39% on numbers, 48% on entities and 59% on dates, but **74% on citations**: 26 of 34 citation fakes are shorter than the real title (median 0.83 of its length), and on citations alone the interval [0.57, 0.85] excludes 50%. When selecting the final citations, prefer fakes (or alternates) close in length to the real title, then rerun this check on the final 80.
+
+## Stage 4: review sheet
+
+`make_review.py` writes `research/data/review_v1.csv`, one row per candidate with a passing fake, sorted by `hallucination_type` and then `category`, with empty `keep` and `notes` columns. `alt_fake_2` and `alt_fake_3` hold the alternate fabricated spans, which replace `real_span` in `answer_real` exactly as the main fake does. It refuses to overwrite a sheet that already has entries in `keep` or `notes`.
+
+```sh
+cd research/dataset_generation
+../.venv/bin/python make_review.py
+```
+
+`flags` gathers everything worth a second look: `length_ratio_…` (the fake is much shorter or longer than the real span, a possible tell), the same for an alternate (`alt2:…`, `alt3:…`), `crossref_year_…` (the cited year is one off Crossref's), and `claim_wrong` or `claim_unverified` from the fact check below.
+
+`research/data/claims_v1.csv` is an advisory fact check of every other claim in each real answer (dates, co-authors, superlatives), since stage 1 verifies only `real_span`. Four Claude subagents (`claude-opus-5-5`, one per type) read the stage 1 revision of each cited article, the Crossref record for citations, and other English Wikipedia pages, and recorded `ok`, `wrong` (a source contradicts the claim) or `unverified`, with the claim and a short quote as evidence. Treat it as a pointer for the hand check, not a verdict.
 
 ## Attention checks
 
