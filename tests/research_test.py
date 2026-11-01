@@ -1,4 +1,4 @@
-"""CSV validation checks; no database credentials needed."""
+"""CSV validation and export-query checks; no database credentials needed."""
 import csv
 import importlib.util
 from pathlib import Path
@@ -8,6 +8,9 @@ ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location('import_pairs', ROOT / 'research' / 'import_pairs.py')
 module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
+export_spec = importlib.util.spec_from_file_location('export_data', ROOT / 'research' / 'export_data.py')
+export = importlib.util.module_from_spec(export_spec)
+export_spec.loader.exec_module(export)
 
 
 class ImportValidation(unittest.TestCase):
@@ -59,6 +62,15 @@ class ImportValidation(unittest.TestCase):
         self.assertFalse(result['is_attention_check'])
         self.assertIsNone(result['source_url'])
         self.assertTrue(module.validate({**self.row, 'id': 'bad'})[1])
+
+
+class ExportColumns(unittest.TestCase):
+    def test_analysis_columns(self):
+        # Item position (1-10, by schema constraint) and the repeat-play and study flags travel with every guess.
+        for column in ('i.position', 's.is_study', 's.is_pilot', 's.device_id', 'r.device_round_number'):
+            with self.subTest(column=column):
+                self.assertIn(column, export.QUERY)
+        self.assertIn('(%s or not s.is_pilot) and (%s or s.is_study)', export.QUERY)
 
 
 if __name__ == '__main__':

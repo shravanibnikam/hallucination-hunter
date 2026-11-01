@@ -58,6 +58,6 @@ jobs:
           DATABASE_URL: postgresql://hunter:local_test_password@localhost:5432/hunter_test
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:e2e
-      - run: python research/export_data.py
+      - run: python research/export_data.py && python research/export_data.py --include-pilot --include-nonstudy
         env:
           DATABASE_URL: postgresql://hunter:local_test_password@localhost:5432/hunter_test
