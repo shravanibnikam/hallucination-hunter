@@ -6,7 +6,7 @@ This is a manual pre-deploy checklist, not an automatic deployment script. Use S
 
 - [ ] Run lint, typecheck, unit tests, database integration tests, and both-condition Playwright tests as described in the README.
 - [ ] Replace the placeholder study contact on About and Privacy.
-- [ ] Replace `[SAMPLE]` facts with Shravani's validated study dataset; include an active attention check, stable UUIDs, exact fabricated spans, sources, origin, and dataset version.
+- [ ] Replace `[SAMPLE]` facts with Shravani's validated study dataset; include an active attention check, stable UUIDs, exact fabricated and real spans, sources, origin, and dataset version.
 - [ ] Review the consent and publication wording for the intended study. Keep raw exports private; remove aliases and coarsen timestamps before sharing anonymized data.
 - [ ] Review `ROUND_LENGTH` and `TOO_FAST_MS` in `lib/constants.ts`. If round length is changed above 10, update the database constraints, schemas, and share bounds together. Bump the package version when behavior or study rules change.
 - [ ] Ensure `.env` files and `research/data/exports/` are absent from the Git index. Keep production credentials only in your local environment and Vercel's environment settings.
@@ -24,7 +24,7 @@ research/.venv/bin/python research/import_pairs.py path/to/validated_pairs.csv -
 research/.venv/bin/python research/import_pairs.py path/to/validated_pairs.csv
 ```
 
-Future migrations must be new files applied in order; never rewrite a migration already deployed. The sample CSV is suitable only for development or a clearly labeled pilot.
+Future migrations must be new files applied in order; never rewrite a migration already deployed. `202610310001_prefreeze.sql` deactivates every existing pair, because pairs from before `real_span` cannot be revised in place; import the dataset again (with new UUIDs for any pair a round has used) before playing. The sample CSV is suitable only for development or a clearly labeled pilot.
 
 ## Verify database access
 

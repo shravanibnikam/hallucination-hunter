@@ -33,7 +33,7 @@ Coming soon. No study findings are claimed from the development samples.
 
 ## Dataset
 
-[Research dataset — coming soon](#dataset). The included [sample CSV](research/data/sample_pairs.csv) has six ordinary examples and two attention checks, all prefixed `[SAMPLE]` and versioned `sample-v0`. The demonstration round has seven items: six ordinary facts plus one randomly selected check. Replace these examples before recruitment.
+[Research dataset — coming soon](#dataset). The included [sample CSV](research/data/sample_pairs.csv) has six ordinary examples and two attention checks, all prefixed `[SAMPLE]` and versioned `sample-v1`. Each row names the `real_span` its fake replaces. The demonstration round has seven items: six ordinary facts plus one randomly selected check. Replace these examples before recruitment.
 
 Dataset generation and analysis are owned by Shravani. Their folders contain only placeholder READMEs.
 
@@ -125,7 +125,7 @@ research/.venv/bin/python research/export_data.py
 research/.venv/bin/python research/export_data.py --include-pilot
 ```
 
-Imports require stable UUIDs and validate required fields, enums, exact fabricated spans, and HTTP(S) URLs. Valid rows are upserted transactionally, invalid rows are reported with line numbers, and a nonzero status reports errors. Deactivation refuses invalid or empty files and never deletes data.
+Imports require stable UUIDs and validate required fields, enums, exact fabricated spans, and HTTP(S) URLs. Every pair, attention checks included, needs a `real_span` that appears exactly once in `answer_real` and differs from `fabricated_span`, and `answer_fake` must be `answer_real` with that one occurrence replaced by `fabricated_span`; a database check constraint enforces the same rule. Valid rows are upserted transactionally, invalid rows are reported with line numbers, and a nonzero status reports errors. Deactivation refuses invalid or empty files and never deletes data.
 
 Exports are timestamped CSVs in ignored `research/data/exports/`. They include incomplete sessions and quality flags (`completed`, `failed_attention_check`, `flagged_too_fast`), so exclusion choices remain explicit. `device_round_number` is 1 for a browser's first session by creation time, counting every session including pilot ones; it is empty without a `device_id`. Pilot guesses are excluded by default. Raw exports include optional aliases and precise timestamps: review and anonymize them before public release. The export script is data transport, not an analysis pipeline.
 

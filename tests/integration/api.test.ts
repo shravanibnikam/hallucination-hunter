@@ -42,7 +42,7 @@ async function answer(s: SessionInfo, position: number, correct = true, ms = 200
 beforeAll(async () => {
   await sql`truncate guesses,session_items,sessions,pairs`;
   for (let i = 1; i <= 14; i++)
-    await sql`insert into pairs(question,category,answer_real,answer_fake,fabricated_span,hallucination_type,explanation,origin,is_attention_check,dataset_version) values (${`[SAMPLE] Fixture ${i}: is two plus two four?`},${["science", "history", "geography"][i % 3]},'Two plus two is four.','Two plus two is five.','five',${["wrong_number", "wrong_entity", "wrong_date", "invented_citation"][i % 4]},'Two plus two is four.','synthetic',${i > 12},'test-v0')`;
+    await sql`insert into pairs(question,category,answer_real,answer_fake,fabricated_span,real_span,hallucination_type,explanation,origin,is_attention_check,dataset_version) values (${`[SAMPLE] Fixture ${i}: is two plus two four?`},${["science", "history", "geography"][i % 3]},'Two plus two is four.','Two plus two is five.','five','four',${["wrong_number", "wrong_entity", "wrong_date", "invented_citation"][i % 4]},'Two plus two is four.','synthetic',${i > 12},'test-v0')`;
 });
 beforeEach(async () => {
   await sql`truncate guesses,session_items,sessions`;
@@ -186,6 +186,13 @@ test("assigned facts cannot be edited, but can be deactivated", async () => {
   await expect(sql`update pairs set answer_real='Changed' where id=${i.pair_id}`).rejects.toThrow("immutable");
   await sql`update pairs set is_active=false where id=${i.pair_id}`;
   await sql`update pairs set is_active=true where id=${i.pair_id}`;
+});
+test("the database rejects fakes that are not a single swap of real_span", async () => {
+  const insert = (real: string, fake: string, fabricated: string, realSpan: string | null) => sql`insert into pairs(question,category,answer_real,answer_fake,fabricated_span,real_span,hallucination_type,explanation,origin,dataset_version) values ('[SAMPLE] Q','science',${real},${fake},${fabricated},${realSpan},'wrong_number','E','synthetic','test-v0')`;
+  for (const [real, fake, fabricated, realSpan] of [["Four is four.", "Five is four.", "Five", "four"], ["Two is four.", "Two is four.", "four", "four"], ["Two is four.", "Two was five.", "five", "four"], ["Two is four.", "Two is five.", "five", null], ["Code aaa.", "Code ba.", "b", "aa"]] as const)
+    await expect(insert(real, fake, fabricated, realSpan)).rejects.toThrow("pairs_real_span_check");
+  await insert("Two is four.", "Two is five.", "five", "four");
+  await sql`delete from pairs where question='[SAMPLE] Q'`;
 });
 test("RLS is enabled with zero public policies and invoker-safe exposure view", async () => {
   const tables = await sql`select relname,relrowsecurity from pg_class where oid in ('pairs'::regclass,'sessions'::regclass,'session_items'::regclass,'guesses'::regclass)`;

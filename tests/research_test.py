@@ -30,6 +30,19 @@ class ImportValidation(unittest.TestCase):
     def test_exact_span(self):
         self.assertTrue(module.validate({**self.row, 'fabricated_span': 'FOUR'})[1])
 
+    def test_real_span(self):
+        self.assertEqual(module.validate({**self.row, 'real_span': 'three'})[1], [])
+        cases = {
+            'missing': ({'real_span': ''}, 'real_span: required'),
+            'twice': ({'answer_real': 'A triangle has three sides, three corners.', 'answer_fake': 'A triangle has four sides, three corners.'}, 'real_span: must appear exactly once in answer_real'),
+            'overlapping': ({'answer_real': 'Code aaa.', 'answer_fake': 'Code ba.', 'fabricated_span': 'b', 'real_span': 'aa'}, 'real_span: must appear exactly once in answer_real'),
+            'equal': ({'answer_real': 'A triangle has four sides.', 'real_span': 'four'}, 'real_span: must differ from fabricated_span'),
+            'differs elsewhere': ({'answer_fake': 'A triangle has four edges.', 'fabricated_span': 'four'}, 'answer_fake: must equal answer_real with real_span replaced by fabricated_span'),
+        }
+        for name, (change, error) in cases.items():
+            with self.subTest(name):
+                self.assertIn(error, module.validate({**self.row, **change})[1])
+
     def test_urls(self):
         for url in ['javascript:alert(1)', 'https://', 'http://a b.com', 'https://user:pass@example.com', 'https://example.com:bad', 'https://exa<mple.com', 'https://example.com/\x00']:
             with self.subTest(url=url):

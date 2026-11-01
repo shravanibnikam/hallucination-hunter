@@ -4,6 +4,7 @@ Python 3.11+. Install `requirements.txt` in a virtual environment. Set `DATABASE
 
 `python import_pairs.py data/sample_pairs.csv --dry-run` validates without a database.
 `python import_pairs.py data/sample_pairs.csv` imports valid rows in a transaction.
+Every row needs a `real_span`: it must appear exactly once in `answer_real`, differ from `fabricated_span`, and `answer_fake` must equal `answer_real` with that occurrence replaced by `fabricated_span`. Errors are reported by CSV line.
 `--deactivate-missing` marks other pairs inactive; it never deletes. This option refuses a CSV with invalid rows or no valid rows.
 
 The sample CSV is for development only. Dataset generation and analysis are owned by Shravani.
