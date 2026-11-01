@@ -43,8 +43,11 @@ Do not rerun `make_review.py` once you have started: it refuses to overwrite a s
 From the repository root, with the research virtual environment described in the main README:
 
 ```sh
-research/.venv/bin/pip install -r research/requirements.txt
+research/.venv/bin/pip install -r research/requirements.txt              # checks, artifact check, review sheet, tests
+research/.venv/bin/pip install -r research/requirements-generation.txt   # adds llama-cpp-python, only to regenerate fakes
 ```
+
+`llama-cpp-python` builds from source, so it lives in `requirements-generation.txt` and CI never installs it; `make_fakes.py` imports it only inside the function that runs the model.
 
 Network access is needed for the English Wikipedia and Wikidata APIs and the Crossref API. Every response is cached in `research/dataset_generation/.cache/` (ignored by Git), so reruns repeat the same answers; delete that folder to fetch fresh ones. Whole articles are fetched because a fake must not appear anywhere in its source article; each article is stored once and linked under both its title and its revision.
 
@@ -85,7 +88,7 @@ Model: `microsoft/Phi-3-mini-4k-instruct-gguf`, file `Phi-3-mini-4k-instruct-q4.
 Run (the script downloads the pinned file on first use and refuses one whose SHA-256 differs):
 
 ```sh
-CMAKE_ARGS="-DGGML_METAL=OFF" research/.venv/bin/pip install llama-cpp-python==0.3.36   # once
+CMAKE_ARGS="-DGGML_METAL=OFF" research/.venv/bin/pip install -r research/requirements-generation.txt   # once
 cd research/dataset_generation
 ../.venv/bin/python make_fakes.py
 ```

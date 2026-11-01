@@ -1,0 +1,3 @@
+# Only for generating fakes (research/dataset_generation/make_fakes.py). CI and the tests install requirements.txt alone.
+-r requirements.txt
+llama-cpp-python==0.3.36
