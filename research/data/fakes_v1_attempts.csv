@@ -643,3 +643,87 @@ edf1587a-dbd4-4cf6-9026-cd65f607222c,6,20261102,Shared Asset Collapse Study,kept
 6aa52cb3-bc47-40c3-bd71-f4d57d7de5ab,4,20261102,Human Influence on Global Habitats,rejected,citation: punctuation differs from the real title,
 6aa52cb3-bc47-40c3-bd71-f4d57d7de5ab,5,20261102,Earth's Biosphere Control by Man,rejected,citation: length outside 0.85 to 1.15 times the real title,
 6aa52cb3-bc47-40c3-bd71-f4d57d7de5ab,6,20261102,Human Mastery of Earth's Natural Resources,kept,,
+1127873f-ebb5-4943-a428-1a4ed8b244d9,1,20261101,Delhi,rejected,fabricated span appears in the source article,
+1127873f-ebb5-4943-a428-1a4ed8b244d9,2,20261101,Kolkata,rejected,entity: not the same kind of thing (Wikidata instance-of differs); fabricated span appears in the source article,length_ratio_1.75
+1127873f-ebb5-4943-a428-1a4ed8b244d9,3,20261101,Jaipur,rejected,fabricated span appears in the source article,length_ratio_1.50
+0eb1417e-a632-4058-8b10-c3f935c4b195,1,20261101,Nile,kept,,
+0eb1417e-a632-4058-8b10-c3f935c4b195,2,20261101,Danube,kept,,
+0eb1417e-a632-4058-8b10-c3f935c4b195,3,20261101,Tiber,kept,,
+54e97191-2965-486f-9d43-31b0418f8111,1,20261101,Lake Tanganyika,rejected,fabricated span appears in the source article,
+54e97191-2965-486f-9d43-31b0418f8111,2,20261101,Lake Malawi,rejected,fabricated span appears in the source article,
+54e97191-2965-486f-9d43-31b0418f8111,3,20261101,Lake Chad,kept,,length_ratio_0.69
+b7547a2c-f637-4bd4-8cd6-3122b124dcf5,1,20261101,Cairo,rejected,fabricated span appears in the source article,
+b7547a2c-f637-4bd4-8cd6-3122b124dcf5,2,20261101,Nairobi,rejected,fabricated span appears in the source article,length_ratio_1.40
+b7547a2c-f637-4bd4-8cd6-3122b124dcf5,3,20261101,Dubai,kept,,
+ecf14416-9acb-4a6d-8058-305a5b7a540c,1,20261101,Shikoku,rejected,fabricated span appears in the source article,
+ecf14416-9acb-4a6d-8058-305a5b7a540c,2,20261101,Kyushu,rejected,entity: not the same kind of thing (Wikidata instance-of differs); fabricated span appears in the source article,
+ecf14416-9acb-4a6d-8058-305a5b7a540c,3,20261101,Okinawa,rejected,entity: fake has no unambiguous Wikipedia article; fabricated span appears in the source article,
+58b40103-70cb-4aa5-8440-1a1d17d36eb7,1,20261101,Sahara Desert,rejected,fabricated span appears in the source article,
+58b40103-70cb-4aa5-8440-1a1d17d36eb7,2,20261101,Atacama Desert,kept,,
+58b40103-70cb-4aa5-8440-1a1d17d36eb7,3,20261101,Syrian Desert,kept,,
+9386ba3b-915c-46d0-8e24-8b1bcb28c5fd,1,20261101,Danube Strait,rejected,entity: fake has no unambiguous Wikipedia article,
+9386ba3b-915c-46d0-8e24-8b1bcb28c5fd,2,20261101,Suez Strait,rejected,entity: fake has no unambiguous Wikipedia article,
+9386ba3b-915c-46d0-8e24-8b1bcb28c5fd,3,20261101,Strait of Malacca,kept,,length_ratio_1.31
+e95aedc5-f3cd-4558-8176-1c5f7cc3d7bb,1,20261101,Mombasa,rejected,fabricated span appears in the source article,
+e95aedc5-f3cd-4558-8176-1c5f7cc3d7bb,2,20261101,Kisumu,rejected,fabricated span appears in the source article,
+e95aedc5-f3cd-4558-8176-1c5f7cc3d7bb,3,20261101,Eldoret,rejected,fabricated span appears in the source article,
+809c6095-8aea-4123-88be-bb7fe8b2037f,1,20261101,Danube,kept,,
+809c6095-8aea-4123-88be-bb7fe8b2037f,2,20261101,Nile,kept,,
+809c6095-8aea-4123-88be-bb7fe8b2037f,3,20261101,Amazon,rejected,entity: fake has no unambiguous Wikipedia article,
+0d93e609-3fd9-423a-bb1f-03c28c9fd464,1,20261101,Caucasus,rejected,entity: not the same kind of thing (Wikidata instance-of differs); fabricated span appears in the source article,length_ratio_2.00
+0d93e609-3fd9-423a-bb1f-03c28c9fd464,2,20261101,Rockies,kept,,length_ratio_1.75
+0d93e609-3fd9-423a-bb1f-03c28c9fd464,3,20261101,Andes,kept,,
+5b32e6bd-12e9-4570-8891-76ac588b2606,1,20261101,Thomas Hobbes,rejected,fabricated span appears in the source article,length_ratio_0.68
+5b32e6bd-12e9-4570-8891-76ac588b2606,2,20261101,Dante Alighieri,kept,,
+5b32e6bd-12e9-4570-8891-76ac588b2606,3,20261101,Leonardo da Vinci,kept,,
+247aad04-bf71-4e75-a955-1a7096eb0015,1,20261101,Nelson Mandela,rejected,fabricated span appears in the source article,
+247aad04-bf71-4e75-a955-1a7096eb0015,2,20261101,Martin Luther King Jr.,rejected,fabricated span appears in the source article,length_ratio_1.57
+247aad04-bf71-4e75-a955-1a7096eb0015,3,20261101,Cesar Chavez,kept,,
+b51818dc-c00e-4868-81bb-3870afc324f6,1,20261101,George Washington,rejected,fabricated span appears in the source article,
+b51818dc-c00e-4868-81bb-3870afc324f6,2,20261101,Thomas Jefferson,rejected,fabricated span appears in the source article,
+b51818dc-c00e-4868-81bb-3870afc324f6,3,20261101,Theodore Roosevelt,kept,,
+e9004797-08c7-4dc8-a4d0-cb52114d6fda,1,20261101,Charles IV,rejected,entity: fake has no unambiguous Wikipedia article,
+e9004797-08c7-4dc8-a4d0-cb52114d6fda,2,20261101,Louis XVIII,kept,,length_ratio_1.38
+e9004797-08c7-4dc8-a4d0-cb52114d6fda,3,20261101,Henry IV,rejected,entity: fake has no unambiguous Wikipedia article,
+c9b9d710-f77e-407c-83f3-c54f2f76ecf5,1,20261101,Aristotle,kept,,
+c9b9d710-f77e-407c-83f3-c54f2f76ecf5,2,20261101,Joan of Arc,kept,,
+c9b9d710-f77e-407c-83f3-c54f2f76ecf5,3,20261101,Leonardo da Vinci,kept,,length_ratio_1.55
+482a88e3-7683-4182-9239-54916f1fcb2a,1,20261101,Gupta Empire,kept,,
+482a88e3-7683-4182-9239-54916f1fcb2a,2,20261101,Mughal Empire,kept,,
+482a88e3-7683-4182-9239-54916f1fcb2a,3,20261101,Ottoman Empire,kept,,
+e1de2f7d-a3ac-4025-b06f-702ee2480314,1,20261101,Tang dynasty,rejected,fabricated span appears in the source article,
+e1de2f7d-a3ac-4025-b06f-702ee2480314,2,20261101,Han dynasty,kept,,
+e1de2f7d-a3ac-4025-b06f-702ee2480314,3,20261101,Song dynasty,rejected,fabricated span appears in the source article,
+0fab3f8f-44ce-4259-9cda-0e51f668b544,1,20261101,HMS Royal Sovereign,rejected,entity: not the same kind of thing (Wikidata instance-of differs),length_ratio_1.73
+0fab3f8f-44ce-4259-9cda-0e51f668b544,2,20261101,HMS Royal George,rejected,entity: not the same kind of thing (Wikidata instance-of differs); fabricated span appears in the source article,length_ratio_1.45
+0fab3f8f-44ce-4259-9cda-0e51f668b544,3,20261101,HMS Queen Elizabeth,rejected,entity: not the same kind of thing (Wikidata instance-of differs),length_ratio_1.73
+f9556742-aad9-4076-9549-6e1fabfcb21d,1,20261101,Vasco Núñez de Balboa,rejected,fabricated span appears in the source article,length_ratio_1.62
+f9556742-aad9-4076-9549-6e1fabfcb21d,2,20261101,Francisco Pizarro,rejected,fabricated span appears in the source article,length_ratio_1.31
+f9556742-aad9-4076-9549-6e1fabfcb21d,3,20261101,Pedro de Alvarado,rejected,fabricated span appears in the source article,length_ratio_1.31
+07ff2811-fcbf-4417-992a-49261d6fe69f,1,20261101,Pyrrhus,rejected,entity: fake has no unambiguous Wikipedia article,
+07ff2811-fcbf-4417-992a-49261d6fe69f,2,20261101,Scipio,rejected,entity: fake has no unambiguous Wikipedia article; fabricated span appears in the source article,
+07ff2811-fcbf-4417-992a-49261d6fe69f,3,20261101,Mago,rejected,entity: fake has no unambiguous Wikipedia article; fabricated span appears in the source article,length_ratio_0.50
+081f8e0d-7092-4669-a5fe-c21994ba613f,1,20261101,320000,rejected,"number: unit, formatting or digit count differs",
+081f8e0d-7092-4669-a5fe-c21994ba613f,2,20261101,340000,rejected,"number: unit, formatting or digit count differs",
+081f8e0d-7092-4669-a5fe-c21994ba613f,3,20261101,315000,rejected,"number: unit, formatting or digit count differs",
+d5394581-fdb4-434d-92b5-c4c843d8bcb0,1,20261101,"25,647",kept,,
+d5394581-fdb4-434d-92b5-c4c843d8bcb0,2,20261101,"67,245",kept,,
+d5394581-fdb4-434d-92b5-c4c843d8bcb0,3,20261101,"95,372",kept,,
+bcbc1a15-862b-41b2-ae97-5aae662e75f2,1,20261101,270,rejected,fabricated span appears in the source article,
+bcbc1a15-862b-41b2-ae97-5aae662e75f2,2,20261101,430,kept,,
+bcbc1a15-862b-41b2-ae97-5aae662e75f2,3,20261101,500,kept,,
+5cf7ae04-bd38-4180-90f3-9612caedfdcb,1,20261101,450000,rejected,"number: unit, formatting or digit count differs",
+5cf7ae04-bd38-4180-90f3-9612caedfdcb,2,20261101,675000,rejected,"number: unit, formatting or digit count differs",
+5cf7ae04-bd38-4180-90f3-9612caedfdcb,3,20261101,123456,rejected,"number: unit, formatting or digit count differs",
+e7748242-0561-4b98-bc73-e362f3a0ca80,1,20261101,112,kept,,
+e7748242-0561-4b98-bc73-e362f3a0ca80,2,20261101,201,kept,,
+e7748242-0561-4b98-bc73-e362f3a0ca80,3,20261101,301,kept,,
+a3669bc5-fceb-4782-94c0-d25512e313f2,1,20261101,"1,596.2",kept,,
+a3669bc5-fceb-4782-94c0-d25512e313f2,2,20261101,"1,594.3",kept,,
+a3669bc5-fceb-4782-94c0-d25512e313f2,3,20261101,"1,595.9",kept,,
+e9ea2f56-8180-4784-84a5-c21b9acc572e,1,20261101,56.00,kept,,
+e9ea2f56-8180-4784-84a5-c21b9acc572e,2,20261101,55.80,kept,,
+e9ea2f56-8180-4784-84a5-c21b9acc572e,3,20261101,55.90,kept,,
+bd538f3a-3d99-42c7-913f-3f91c1b769eb,1,20261101,"12,345",kept,,
+bd538f3a-3d99-42c7-913f-3f91c1b769eb,2,20261101,"13,467",kept,,
+bd538f3a-3d99-42c7-913f-3f91c1b769eb,3,20261101,"13,421",kept,,

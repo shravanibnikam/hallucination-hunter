@@ -6,7 +6,7 @@ Everything here is Python, needs no API key, account or payment, and writes its 
 
 ## Your hand check: `research/data/review_v1.csv`
 
-Open `research/data/review_v1.csv` (126 rows, sorted by `hallucination_type`, then `category`) and fill in `keep` on every row:
+Open `research/data/review_v1.csv` (146 rows, sorted by `hallucination_type`, then `category`) and fill in `keep` on every row:
 
 | `keep` | Meaning |
 |---|---|
@@ -21,12 +21,12 @@ Use `notes` for anything else, such as a correction to the real answer or a bett
 
 | Type | science | geography | history | Total |
 |---|---|---|---|---|
-| `wrong_number` | 11 | 10 | 7 | 28 |
-| `wrong_entity` | 13 | 6 | 6 | 25 |
+| `wrong_number` | 11 | 10 | 13 | 34 |
+| `wrong_entity` | 13 | 13 | 13 | 39 |
 | `wrong_date` | 13 | 13 | 13 | 39 |
 | `invented_citation` | 12 | 12 | 10 | 34 |
 
-`wrong_entity` is the tightest: with 6 in geography and 6 in history, the best possible split is 8/6/6, and you can drop at most 5 entity rows.
+Every type has at least 34 rows and at least 10 in each category, so each type can lose 14 rows and still reach 20 with a 7/7/6 split.
 
 For each row, check that the real answer is right, that the fake is wrong but believable, and that nothing other than the span gives it away. `flags` points at rows worth a second look:
 
@@ -50,9 +50,9 @@ Network access is needed for the English Wikipedia and Wikidata APIs and the Cro
 
 ## Stage 1: candidate real answers
 
-Input: `research/data/candidates_v1.csv`: 160 candidates (40 per type, split 14/13/13 across `science`, `geography` and `history`), plus 12 citation candidates added later (6 science, 6 geography) to give the stricter citation checks enough material. Columns: `id`, `hallucination_type`, `category`, `question`, `answer_real`, `real_span`, `source_url`. Every row has a UUID that later stages keep.
+Input: `research/data/candidates_v1.csv`: 160 candidates (40 per type, split 14/13/13 across `science`, `geography` and `history`), then 40 more for margin where checks are strict: 12 `invented_citation` (6 science, 6 geography), 20 `wrong_entity` (10 geography, 10 history) and 8 `wrong_number` (history), 200 in total. Columns: `id`, `hallucination_type`, `category`, `question`, `answer_real`, `real_span`, `source_url`. Every row has a UUID that later stages keep.
 
-Provenance: the candidates were written by Claude (`claude-opus-5-5`) in a Claude Code session, from its own knowledge, following the rules below. They were not copied from Wikipedia; Wikipedia and Crossref are used only to check them. No topic appears twice, so one item never gives away another.
+Provenance: the candidates were written by Claude (`claude-opus-5-5`) in a Claude Code session, from its own knowledge, following the rules below. They were not copied from Wikipedia; Wikipedia and Crossref are used only to check them. No topic appears twice, so one item never gives away another. The 28 entity and number candidates added last were drafted by three Claude subagents (`claude-opus-5-5`), one per type and category, under the same rules; each draft passed this stage's format and source checks and a Wikidata lookup before it was added.
 
 Rules for each candidate:
 
@@ -142,9 +142,9 @@ It runs once on all pairs and again with a separate model for each type, so a te
 
 | | Pairs | Accuracy | 95% CI | |
 |---|---|---|---|---|
-| Overall | 126 | 51.6% | [42.9%, 60.1%] | pass |
-| `wrong_number` | 28 | 50.0% | [32.6%, 67.4%] | pass |
-| `wrong_entity` | 25 | 52.0% | [33.5%, 70.0%] | pass |
+| Overall | 146 | 48.6% | [40.7%, 56.7%] | pass |
+| `wrong_number` | 34 | 50.0% | [34.1%, 65.9%] | pass |
+| `wrong_entity` | 39 | 51.3% | [36.2%, 66.1%] | pass |
 | `wrong_date` | 39 | 51.3% | [36.2%, 66.1%] | pass |
 | `invented_citation` | 34 | 58.8% | [42.2%, 73.6%] | pass |
 
