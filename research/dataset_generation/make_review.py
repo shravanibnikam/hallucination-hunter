@@ -1,6 +1,6 @@
-"""Stage 4: write research/data/review_v1.csv, one row per candidate with a passing fake, for the hand check.
+"""Stage 4: write research/data/review_v1.csv, one row per candidate with a passing fake, for the review.
 
-Rows are sorted by hallucination_type, then category. keep and notes start empty and are filled in by hand
+Rows are sorted by hallucination_type, then category. keep and notes start empty and are filled in by finalize.py combine from the two independent AI review passes
 (see the README). Flags include claim_wrong or claim_unverified from research/data/claims_v1.csv, the fact check
 of each answer's other claims. The script refuses to overwrite a sheet that already has review entries.
 """

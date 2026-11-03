@@ -1,12 +1,24 @@
 # Dataset generation (v1)
 
-Builds the v1 study dataset: 80 pairs, 20 of each `hallucination_type` (`wrong_number`, `wrong_entity`, `wrong_date`, `invented_citation`), plus 4 attention checks. The pipeline generates about twice what is needed and stops for a hand check before anything is selected or imported.
+Builds the v1 study dataset: 80 pairs, 20 of each `hallucination_type` (`wrong_number`, `wrong_entity`, `wrong_date`, `invented_citation`), plus 4 attention checks. The pipeline generates about twice what is needed, and two independent AI review passes decide which rows are kept before anything is selected or imported; no human reviewed the rows.
 
 Everything here is Python, needs no API key, account or payment, and writes its data to `research/data/`.
 
-## Your hand check: `research/data/review_v1.csv`
+## Review: `research/data/review_v1.csv`
 
-Open `research/data/review_v1.csv` (146 rows, sorted by `hallucination_type`, then `category`) and fill in `keep` on every row:
+No human reviewed the rows. The review was done by two independent AI passes, each source-quoted, and a row is kept only when both passes agree.
+
+`research/data/review_v1.csv` has one row per candidate with a passing fake (195 rows, sorted by `hallucination_type`, then `category`). For each row, two passes, A and B, each decided `yes`, `alt2`, `alt3` or `no`. Each pass of each type was a separate Claude subagent (`claude-opus-5-5`) started fresh, told not to open the other pass's output, `claims_v1.csv` or `review_v1_passes.csv`, and given the same instructions:
+
+1. Real answer: split `answer_real` into its claims and, for every claim, quote the sentence or infobox line from the source that supports it (the stage 1 Wikipedia revision, or for citations the Crossref record and the publisher page the DOI resolves to). Any claim without a supporting quote fails the row. Never rely on your own knowledge.
+2. Choose `no` if the source gives varying figures or accounts for a claim, or if a knowledgeable player could reasonably think the real answer is wrong.
+3. Fake: plausible to a non-expert, definitely false according to the source, and in the same style as the real answer. Patterned numbers (`1,234,567`, repeated digits) fail.
+4. If the main fake passes, `yes`; else the first passing alternate (`alt2`, then `alt3`); else `no`.
+5. When in doubt, `no`.
+
+Both passes, with every claim's quote, a verdict on each fake and a one-sentence reason, are in `research/data/review_v1_passes.csv` (`id`, `pass`, `hallucination_type`, `decision`, `real_answer_quotes`, `fake_assessment`, `reason`; two rows per review row). Every quote from a Wikipedia source was matched against the cached article text, ignoring spacing and punctuation: 1,033 of 1,034 match word for word, and the one paraphrase is on a row both passes rejected. Citation claims are quoted from Crossref record fields.
+
+`finalize.py combine` writes the combined decision into `keep`: the shared decision when both passes made the same keep decision (both `yes`, or both the same alternate), and `no` for every disagreement. `notes` gets a one-line reason (for a rejection, the rejecting pass's reason).
 
 | `keep` | Meaning |
 |---|---|
@@ -15,28 +27,19 @@ Open `research/data/review_v1.csv` (146 rows, sorted by `hallucination_type`, th
 | `alt3` | Use `alt_fake_3` instead. |
 | `no` | Drop the candidate. |
 
-Use `notes` for anything else, such as a correction to the real answer or a better explanation.
+Agreement and kept rows, including the 49 top-up rows that got a fake (stage 1 explains the top-up):
 
-**You need at least 20 rows marked `yes`, `alt2` or `alt3` in each `hallucination_type`** (80 in total), spread across `science`, `geography` and `history` as evenly as you can (7/7/6). Available rows:
+| Type | Rows | Passes agree | Kept | science | geography | history |
+|---|---|---|---|---|---|---|
+| `wrong_number` | 52 | 46 (88%) | 28 | 11 | 10 | 7 |
+| `wrong_entity` | 55 | 51 (93%) | 31 | 12 | 10 | 9 |
+| `wrong_date` | 39 | 37 (95%) | 31 | 11 | 10 | 10 |
+| `invented_citation` | 49 | 45 (92%) | 16 | 5 | 5 | 6 |
+| All | 195 | 179 (92%) | 106 | | | |
 
-| Type | science | geography | history | Total |
-|---|---|---|---|---|
-| `wrong_number` | 11 | 10 | 13 | 34 |
-| `wrong_entity` | 13 | 13 | 13 | 39 |
-| `wrong_date` | 13 | 13 | 13 | 39 |
-| `invented_citation` | 12 | 12 | 10 | 34 |
+The selection needs 20 kept rows per type. `invented_citation` has 16 after its 20-candidate top-up, so nothing has been selected.
 
-Every type has at least 34 rows and at least 10 in each category, so each type can lose 14 rows and still reach 20 with a 7/7/6 split.
-
-For each row, check that the real answer is right, that the fake is wrong but believable, and that nothing other than the span gives it away. `flags` points at rows worth a second look:
-
-- `claim_wrong` or `claim_unverified`: a fact check found a problem with another claim in the real answer. The claim and evidence are in `research/data/claims_v1.csv` (match on `id`). Fix the answer in `notes` or mark `no`.
-- `length_ratio_…`: the fake is much shorter or longer than the real span, a possible tell. `alt2:`/`alt3:` prefixes mean the same for an alternate.
-- `crossref_year_…`: the year in the answer is one off the year Crossref gives.
-
-`length_diff` shows how many characters longer (positive) or shorter (negative) the main fake span is than the real one, on every row.
-
-Do not rerun `make_review.py` once you have started: it refuses to overwrite a sheet with entries, but your copy is the record. Nothing is selected or imported until the hand check is done.
+Other columns: `length_diff` is the main fake span's length minus the real span's, in characters. `flags` lists `length_ratio_…` (the fake is much shorter or longer than the real span; `alt2:`/`alt3:` for an alternate), `crossref_year_…` (the answer's year is one off Crossref's) and `claim_wrong` or `claim_unverified` from the fact check in stage 4.
 
 ## Setup
 
@@ -170,7 +173,7 @@ Review rows flagged `wrong` or `unverified` were rewritten to fix the flagged cl
 
 ## Attention checks
 
-`research/data/attention_checks_v1.csv` holds 4 attention checks written by hand, one per type, each with an obviously absurd fabricated span ("four hundred thousand" legs, "a bowl of tomato soup"). They are complete import rows and pass the importer's rules, including the real-span rule.
+`research/data/attention_checks_v1.csv` holds 4 attention checks written by Claude (`claude-opus-5-5`) in a Claude Code session, one per type, each with an obviously absurd fabricated span ("four hundred thousand" legs, "a bowl of tomato soup"). They are complete import rows and pass the importer's rules, including the real-span rule.
 
 ## Tests
 
