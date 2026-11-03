@@ -197,13 +197,15 @@ def explanation(row):
     if kind == "invented_citation":
         return f'The fabricated title does not exist. The real paper is "{span}", as listed in its Crossref record.'
     article = common.wikipedia_title(row["source_url"])
+    if span in article:
+        # An article titled with the answer itself (Napoleon, Rio Grande) would name the span twice.
+        return f"The correct answer is {span}, as Wikipedia's article on the subject confirms."
+    source = f"Wikipedia's article on {article}"
     if kind == "wrong_number":
-        return f"Wikipedia's article on {article} gives the correct figure as {span}{unit_after(row)}."
+        return f"{source} gives the correct figure as {span}{unit_after(row)}."
     if kind == "wrong_date":
-        return f"Wikipedia's article on {article} gives the correct date as {span}."
-    return (
-        f"Wikipedia's article on {article} confirms that the correct answer is {span}."
-    )
+        return f"{source} gives the correct date as {span}."
+    return f"{source} confirms that the correct answer is {span}."
 
 
 UNITS = (
@@ -214,6 +216,9 @@ UNITS = (
     "kilometres",
     "metres",
     "miles",
+    "feet",
+    "leagues",
+    "base pairs",
     "days",
     "years",
     "bones",

@@ -839,5 +839,64 @@ class ReviewPasses(unittest.TestCase):
                 self.assertEqual(len(finalize.check()[1]), 2)
 
 
+class Explanations(unittest.TestCase):
+    row = {
+        "hallucination_type": "wrong_number",
+        "real_span": "8,849",
+        "answer_real": "Mount Everest rises 8,849 metres above sea level.",
+        "source_url": "https://en.wikipedia.org/wiki/Mount_Everest",
+    }
+
+    def test_rules(self):
+        ok = "Wikipedia's article on Mount Everest gives its height as 8,849 metres."
+        self.assertEqual(finalize.explanation_errors(self.row, ok), [])
+        self.assertIn(
+            "real_span must appear exactly once",
+            finalize.explanation_errors(self.row, ok + " Again, 8,849 metres."),
+        )
+        self.assertIn(
+            "real_span must appear exactly once",
+            finalize.explanation_errors(
+                self.row, "Wikipedia's article gives its height."
+            ),
+        )
+        self.assertTrue(
+            any(
+                e.startswith("numbers not in")
+                for e in finalize.explanation_errors(
+                    self.row, ok + " It was measured in 2020."
+                )
+            )
+        )
+        self.assertIn(
+            "more than 30 words",
+            finalize.explanation_errors(self.row, ok + " word" * 25),
+        )
+        citation = {
+            "hallucination_type": "invented_citation",
+            "real_span": "A Model of Leptons",
+            "answer_real": 'S. Weinberg published "A Model of Leptons" in 1967.',
+            "source_url": "https://doi.org/10.1103/PhysRevLett.19.1264",
+        }
+        self.assertEqual(
+            finalize.explanation_errors(citation, finalize.explanation(citation)), []
+        )
+
+    def test_every_v1_explanation_follows_the_rules(self):
+        """The 80 selected pairs and 4 attention checks: at most 30 words, real_span exactly once, no new number or date."""
+        data = {
+            **finalize.pipeline(),
+            **{r["id"]: r for r in common.read_csv(finalize.ATTENTION)},
+        }
+        explanations = common.read_csv(finalize.EXPLANATIONS)
+        self.assertEqual(len(explanations), 84)
+        for e in explanations:
+            self.assertEqual(
+                finalize.explanation_errors(data[e["id"]], e["explanation"]),
+                [],
+                e["id"],
+            )
+
+
 if __name__ == "__main__":
     unittest.main()
