@@ -1,0 +1,91 @@
+{
+  "input": "data/pairs_v1.csv",
+  "passes": true,
+  "overall": {
+    "pairs": 80,
+    "folds": 10,
+    "seed": 20261101,
+    "accuracy": 0.4625,
+    "ci95": [
+      0.35747993485014634,
+      0.5709564249167455
+    ],
+    "passes": true,
+    "coefficients": {
+      "answer_length": 0.019068074058094138,
+      "span_length": 0.019068074058094138,
+      "digit_count": 0.35331966082724164,
+      "punctuation_count": -0.35834491568127425
+    }
+  },
+  "by_type": {
+    "wrong_number": {
+      "pairs": 20,
+      "folds": 10,
+      "seed": 20261101,
+      "accuracy": 0.5,
+      "ci95": [
+        0.2992980068701797,
+        0.7007019931298203
+      ],
+      "passes": true,
+      "coefficients": {
+        "answer_length": 0.0,
+        "span_length": 0.0,
+        "digit_count": 0.0,
+        "punctuation_count": 0.0
+      }
+    },
+    "wrong_entity": {
+      "pairs": 20,
+      "folds": 10,
+      "seed": 20261101,
+      "accuracy": 0.4,
+      "ci95": [
+        0.21880653127178018,
+        0.6134185007652458
+      ],
+      "passes": true,
+      "coefficients": {
+        "answer_length": 0.1114313116062853,
+        "span_length": 0.1114313116062853,
+        "digit_count": 0.0,
+        "punctuation_count": -0.49669133584696123
+      }
+    },
+    "wrong_date": {
+      "pairs": 20,
+      "folds": 10,
+      "seed": 20261101,
+      "accuracy": 0.4,
+      "ci95": [
+        0.21880653127178018,
+        0.6134185007652458
+      ],
+      "passes": true,
+      "coefficients": {
+        "answer_length": -0.20769885603176624,
+        "span_length": -0.20769885603176624,
+        "digit_count": 0.6707959941542017,
+        "punctuation_count": 0.0
+      }
+    },
+    "invented_citation": {
+      "pairs": 20,
+      "folds": 10,
+      "seed": 20261101,
+      "accuracy": 0.4,
+      "ci95": [
+        0.21880653127178018,
+        0.6134185007652458
+      ],
+      "passes": true,
+      "coefficients": {
+        "answer_length": -0.07391250388090767,
+        "span_length": -0.07391250388090767,
+        "digit_count": 0.0,
+        "punctuation_count": 0.0
+      }
+    }
+  }
+}

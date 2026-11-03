@@ -37,7 +37,7 @@ Agreement and kept rows, including the 68 top-up rows that got a fake (stage 1 e
 | `invented_citation` | 68 | 62 (91%) | 30 | 9 | 11 | 10 |
 | All | 214 | 196 (92%) | 120 | | | |
 
-The selection needs 20 kept rows per type. After the first top-up `invented_citation` had 16, so a second round of 20 citations was added with the same design.
+The selection needs 20 kept rows per type. After the first top-up `invented_citation` had 16, so a second round of 20 citations was added with the same design. The final selection is below.
 
 Other columns: `length_diff` is the main fake span's length minus the real span's, in characters. `flags` lists `length_ratio_…` (the fake is much shorter or longer than the real span; `alt2:`/`alt3:` for an alternate), `crossref_year_…` (the answer's year is one off Crossref's) and `claim_wrong` or `claim_unverified` from the fact check in stage 4.
 
@@ -174,6 +174,43 @@ Review rows flagged `wrong` or `unverified` were rewritten to fix the flagged cl
 ## Attention checks
 
 `research/data/attention_checks_v1.csv` holds 4 attention checks written by Claude (`claude-opus-5-5`) in a Claude Code session, one per type, each with an obviously absurd fabricated span ("four hundred thousand" legs, "a bowl of tomato soup"). They are complete import rows and pass the importer's rules, including the real-span rule.
+
+## Final v1 dataset: `research/data/pairs_v1.csv`
+
+**Frozen.** SHA-256 `e5bf5fbfb80f88ad7348ff293240fdf5b3b5854eaffb0d179a43a603dd19c9d6`. 84 rows in the import format: 80 pairs and 4 attention checks, all with `dataset_version` `v1` and the UUIDs from stage 1.
+
+```sh
+cd research/dataset_generation
+../.venv/bin/python finalize.py check     # validate review_v1.csv, reading only id, keep and notes
+../.venv/bin/python finalize.py select    # research/data/selection_v1.csv
+../.venv/bin/python finalize.py explain   # research/data/explanations_v1.csv
+../.venv/bin/python finalize.py build     # research/data/pairs_v1.csv, with its SHA-256
+```
+
+Every field except `keep` and `notes` comes from the pipeline's own data, matched by `id`. Each type gets 20 pairs split 7/7/6, and the category with the fewest kept rows gets 6 (a tie goes to the earlier of science, geography, history). Every kept row has a note written by `combine`, so the preference for empty notes had no effect, and rows were drawn at random with seed 20261103. Where `keep` is `alt2` or `alt3`, that alternate is the fake (4 `alt2`, 3 `alt3`). 8 of the 20 citation fakes are longer than the real title, inside the 8 to 12 rule, so no length swaps were needed.
+
+| Type | science | geography | history | Total |
+|---|---|---|---|---|
+| `wrong_number` | 7 | 7 | 6 | 20 |
+| `wrong_entity` | 7 | 7 | 6 | 20 |
+| `wrong_date` | 7 | 6 | 7 | 20 |
+| `invented_citation` | 6 | 7 | 7 | 20 |
+
+The 4 attention checks (one per type) are added unchanged apart from their explanations. Each explanation has at most 30 words and names the real value and its source; it contains `real_span` exactly once and no number or date that is not in `answer_real` or the source title. `Explanations` in `tests/dataset_test.py` enforces both rules on all 84.
+
+Artifact check on the final 80 (attention checks excluded), written to `research/data/artifact_check_final_v1.json`. Every interval includes 50%, so no swaps were made:
+
+| | Pairs | Accuracy | 95% CI | |
+|---|---|---|---|---|
+| Overall | 80 | 46.2% | [35.7%, 57.1%] | pass |
+| `wrong_number` | 20 | 50.0% | [29.9%, 70.1%] | pass |
+| `wrong_entity` | 20 | 40.0% | [21.9%, 61.3%] | pass |
+| `wrong_date` | 20 | 40.0% | [21.9%, 61.3%] | pass |
+| `invented_citation` | 20 | 40.0% | [21.9%, 61.3%] | pass |
+
+`research/import_pairs.py --dry-run` on `pairs_v1.csv`, with `DATABASE_URL` set to a throwaway local PostgreSQL 17 database with both migrations applied: 84 valid rows, 0 invalid, nothing written. An import into that same throwaway database also accepted all 84 rows under the schema's constraints. Nothing has been imported into a real Supabase project.
+
+`tests/dataset-v1.test.ts` builds rounds from the real v1 pool with `lib/round-builder.ts`: 1,000 seeded paired rounds and 1,000 seeded single rounds with random exposure counts. Every round has 10 items with exactly one attention check and each type 2 or 3 times. No category has more than 3 of the 9 ordinary items, so the category cap holds. Single rounds show the fake on 4 (486 rounds) or 5 (514 rounds) of the 9 ordinary items, and the attention check always shows its fake. The extra type slot is spread evenly (487 to 516 per type), and all 80 pairs appear (183 to 275 times each).
 
 ## Tests
 
