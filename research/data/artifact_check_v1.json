@@ -1,0 +1,91 @@
+{
+  "input": "data/fakes_v1.csv",
+  "passes": true,
+  "overall": {
+    "pairs": 214,
+    "folds": 10,
+    "seed": 20261101,
+    "accuracy": 0.5467289719626168,
+    "ci95": [
+      0.47979350842098856,
+      0.6120163798468743
+    ],
+    "passes": true,
+    "coefficients": {
+      "answer_length": -0.11094605362685957,
+      "span_length": -0.11094605362685957,
+      "digit_count": 0.274614236373511,
+      "punctuation_count": -0.25710671243436806
+    }
+  },
+  "by_type": {
+    "wrong_number": {
+      "pairs": 52,
+      "folds": 10,
+      "seed": 20261101,
+      "accuracy": 0.5,
+      "ci95": [
+        0.36885862863453955,
+        0.6311413713654604
+      ],
+      "passes": true,
+      "coefficients": {
+        "answer_length": 0.0,
+        "span_length": 0.0,
+        "digit_count": 0.0,
+        "punctuation_count": 0.0
+      }
+    },
+    "wrong_entity": {
+      "pairs": 55,
+      "folds": 10,
+      "seed": 20261101,
+      "accuracy": 0.41818181818181815,
+      "ci95": [
+        0.29737765668213967,
+        0.5496689636581857
+      ],
+      "passes": true,
+      "coefficients": {
+        "answer_length": -0.0423504072714221,
+        "span_length": -0.0423504072714221,
+        "digit_count": 0.0,
+        "punctuation_count": -0.3810443499955159
+      }
+    },
+    "wrong_date": {
+      "pairs": 39,
+      "folds": 10,
+      "seed": 20261101,
+      "accuracy": 0.5128205128205128,
+      "ci95": [
+        0.3619936277532354,
+        0.6613482477597057
+      ],
+      "passes": true,
+      "coefficients": {
+        "answer_length": 0.08673431927834059,
+        "span_length": 0.08673431927834059,
+        "digit_count": 0.3692469785319535,
+        "punctuation_count": 0.0
+      }
+    },
+    "invented_citation": {
+      "pairs": 68,
+      "folds": 10,
+      "seed": 20261101,
+      "accuracy": 0.5882352941176471,
+      "ci95": [
+        0.46961466660873613,
+        0.6974198032762319
+      ],
+      "passes": true,
+      "coefficients": {
+        "answer_length": -0.22797125431091253,
+        "span_length": -0.22797125431091253,
+        "digit_count": 0.0,
+        "punctuation_count": 0.0
+      }
+    }
+  }
+}

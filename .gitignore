@@ -12,6 +12,8 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 research/data/exports/
+research/dataset_generation/.cache/
+research/dataset_generation/models/
 .DS_Store
 Thumbs.db
 *.tsbuildinfo
