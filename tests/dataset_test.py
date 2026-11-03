@@ -10,6 +10,7 @@ sys.path.insert(0, str(ROOT / "research" / "dataset_generation"))
 import artifact_check
 import check_sources
 import common
+import finalize
 import make_fakes
 import make_review
 
@@ -75,7 +76,9 @@ class SpanMatching(unittest.TestCase):
         self.text = common.html_text(ARTICLE["parse"]["text"])
 
     def test_number_and_date_formatting(self):
-        self.assertTrue(common.appears("149,597,870,700", "defined as 149 597 870 700 metres"))
+        self.assertTrue(
+            common.appears("149,597,870,700", "defined as 149 597 870 700 metres")
+        )
         # A year followed by another number is not one spaced figure.
         self.assertFalse(common.appears("1,969,100", "on 20 July 1969 100 metres"))
         for span in (
@@ -355,20 +358,42 @@ class FakeChecks(unittest.TestCase):
     def test_citation_length_and_word_count(self):
         real = "A Mathematical Theory of Communication"
         unrelated = lambda title: ["Something Else Entirely"]
-        self.assertEqual(make_fakes.citation_errors(real, "A Statistical Theory of Signal Exchange", unrelated), [])
+        self.assertEqual(
+            make_fakes.citation_errors(
+                real, "A Statistical Theory of Signal Exchange", unrelated
+            ),
+            [],
+        )
         # 27 characters against 38 is 0.71, outside 0.85 to 1.15, though within the general 0.7 to 1.3 flag.
-        self.assertEqual(make_fakes.citation_errors(real, "A Theory of Signal Exchange", unrelated), ["citation: length outside 0.85 to 1.15 times the real title"])
+        self.assertEqual(
+            make_fakes.citation_errors(real, "A Theory of Signal Exchange", unrelated),
+            ["citation: length outside 0.85 to 1.15 times the real title"],
+        )
         self.assertIn("exactly 11 words long", make_fakes.prompt(citation()))
 
     def test_citation_punctuation_order_and_two_asks(self):
         real = "Gender: A Useful Category of Historical Analysis"
         unrelated = lambda title: ["Something Else Entirely"]
-        self.assertEqual(make_fakes.citation_errors(real, "Labour: A Telling Category of Political Inquiry", unrelated), [])
-        for fake in ("Labour: A Telling Category of Politico-Social Inquiry", "Labour: A Telling, Basic Category of Inquiry", "Labour: A Worker\u2019s Category of Political Inquiry"):
+        self.assertEqual(
+            make_fakes.citation_errors(
+                real, "Labour: A Telling Category of Political Inquiry", unrelated
+            ),
+            [],
+        )
+        for fake in (
+            "Labour: A Telling Category of Politico-Social Inquiry",
+            "Labour: A Telling, Basic Category of Inquiry",
+            "Labour: A Worker\u2019s Category of Political Inquiry",
+        ):
             with self.subTest(fake=fake):
-                self.assertEqual(make_fakes.citation_errors(real, fake, unrelated), ["citation: punctuation differs from the real title"])
+                self.assertEqual(
+                    make_fakes.citation_errors(real, fake, unrelated),
+                    ["citation: punctuation differs from the real title"],
+                )
         # Same characters in a different order also differ.
-        self.assertNotEqual(make_fakes.punctuation("A-B: C"), make_fakes.punctuation("A: B-C"))
+        self.assertNotEqual(
+            make_fakes.punctuation("A-B: C"), make_fakes.punctuation("A: B-C")
+        )
         self.assertEqual(make_fakes.seeds(citation()), (20261101, 20261102))
         self.assertEqual(make_fakes.seeds(candidate()), (20261101,))
 
@@ -378,22 +403,71 @@ class FakeChecks(unittest.TestCase):
         row = candidate()
         with tempfile.TemporaryDirectory() as folder:
             attempts = Path(folder) / "attempts.csv"
-            common.write_csv(attempts, [{"id": row["id"], "rank": 2, "seed": 20261101, "replacement": "1,529"}, {"id": row["id"], "rank": 1, "seed": 20261101, "replacement": "1,547"}], ("id", "rank", "seed", "replacement"))
-            rewritten = {**row, "answer_real": REAL.replace("far higher than copper or tin", "well above that of copper")}
+            common.write_csv(
+                attempts,
+                [
+                    {
+                        "id": row["id"],
+                        "rank": 2,
+                        "seed": 20261101,
+                        "replacement": "1,529",
+                    },
+                    {
+                        "id": row["id"],
+                        "rank": 1,
+                        "seed": 20261101,
+                        "replacement": "1,547",
+                    },
+                ],
+                ("id", "rank", "seed", "replacement"),
+            )
+            rewritten = {
+                **row,
+                "answer_real": REAL.replace(
+                    "far higher than copper or tin", "well above that of copper"
+                ),
+            }
             with mock.patch.object(make_fakes, "ATTEMPTS", attempts):
-                [(logged, fake, failed)] = make_fakes.rejudge([rewritten], {row["id"]: {"source_revision": "", "flags": ""}})
+                [(logged, fake, failed)] = make_fakes.rejudge(
+                    [rewritten], {row["id"]: {"source_revision": "", "flags": ""}}
+                )
         self.assertEqual([a["replacement"] for a in logged], ["1,547", "1,529"])
-        self.assertEqual(fake["answer_fake"], rewritten["answer_real"].replace("1,538", "1,547"))
+        self.assertEqual(
+            fake["answer_fake"], rewritten["answer_real"].replace("1,538", "1,547")
+        )
         self.assertEqual(fake["alt_fake_2"], "1,529")
 
     def test_closest_length_citation_is_main(self):
-        row = citation(real_span="A Mathematical Theory of Communication", answer_real=CITED.replace("Molecular Structure of Nucleic Acids: A Structure for Deoxyribose Nucleic Acid", "A Mathematical Theory of Communication"))
-        fakes = ["A Numerical Account of Transmissions", "A Statistical Theory of Signal Exchange", "A Mechanical Theory of Communicating"]
+        row = citation(
+            real_span="A Mathematical Theory of Communication",
+            answer_real=CITED.replace(
+                "Molecular Structure of Nucleic Acids: A Structure for Deoxyribose Nucleic Acid",
+                "A Mathematical Theory of Communication",
+            ),
+        )
+        fakes = [
+            "A Numerical Account of Transmissions",
+            "A Statistical Theory of Signal Exchange",
+            "A Mechanical Theory of Communicating",
+        ]
         source = {"source_revision": "10.1/x", "flags": ""}
-        logged, main, failed = make_fakes.evaluate(row, source, fakes, (20261101, 20261101, 20261102), search=lambda title: ["Unrelated"])
+        logged, main, failed = make_fakes.evaluate(
+            row,
+            source,
+            fakes,
+            (20261101, 20261101, 20261102),
+            search=lambda title: ["Unrelated"],
+        )
         self.assertIsNone(failed)
         # Real title: 38 characters. 39 is closest (the second reply), then the two 36s in reply order.
-        self.assertEqual([main["fabricated_span"], main["alt_fake_2"], main["alt_fake_3"]], ["A Statistical Theory of Signal Exchange", "A Numerical Account of Transmissions", "A Mechanical Theory of Communicating"])
+        self.assertEqual(
+            [main["fabricated_span"], main["alt_fake_2"], main["alt_fake_3"]],
+            [
+                "A Statistical Theory of Signal Exchange",
+                "A Numerical Account of Transmissions",
+                "A Mechanical Theory of Communicating",
+            ],
+        )
         self.assertEqual([a["seed"] for a in logged], [20261101, 20261101, 20261102])
 
     def test_citations(self):
@@ -559,7 +633,9 @@ class ArtifactCheck(unittest.TestCase):
     def test_balanced_order_scores_exactly_half_without_signal(self):
         # Exactly half the pairs show the fake first, so all-zero features score 50%, not a coin flip's share.
         self.assertEqual(artifact_check.run(pairs(40))["accuracy"], 0.5)
-        self.assertEqual(sum(artifact_check.pair_features([("a", "a", "b", "b")] * 41)[1]), 20)
+        self.assertEqual(
+            sum(artifact_check.pair_features([("a", "a", "b", "b")] * 41)[1]), 20
+        )
 
     def test_noise_features_fit_a_classifier_and_still_pass(self):
         # Fakes vary in length at random, unrelated to which one is fake: a fitted model should not beat chance.
@@ -569,7 +645,15 @@ class ArtifactCheck(unittest.TestCase):
         rows = []
         for i in range(120):
             real, fake = "x" * rng.randint(3, 12), "y" * rng.randint(3, 12)
-            rows.append({"hallucination_type": "wrong_entity", "answer_real": f"It was {real}.", "real_span": real, "answer_fake": f"It was {fake}.", "fabricated_span": fake})
+            rows.append(
+                {
+                    "hallucination_type": "wrong_entity",
+                    "answer_real": f"It was {real}.",
+                    "real_span": real,
+                    "answer_fake": f"It was {fake}.",
+                    "fabricated_span": fake,
+                }
+            )
         result = artifact_check.run(rows)
         self.assertTrue(result["passes"])
         self.assertNotEqual(result["coefficients"]["span_length"], 0)
@@ -600,7 +684,17 @@ class ArtifactCheck(unittest.TestCase):
         self.assertTrue(all((row[0] > 0) == bool(label) for row, label in zip(X, y)))
 
     def test_a_tell_in_one_type_fails_the_per_type_check(self):
-        rows = pairs(60) + [{**r, "hallucination_type": "invented_citation", "fabricated_span": r["fabricated_span"][:-1], "answer_fake": r["answer_fake"].replace(r["fabricated_span"], r["fabricated_span"][:-1])} for r in pairs(30)]
+        rows = pairs(60) + [
+            {
+                **r,
+                "hallucination_type": "invented_citation",
+                "fabricated_span": r["fabricated_span"][:-1],
+                "answer_fake": r["answer_fake"].replace(
+                    r["fabricated_span"], r["fabricated_span"][:-1]
+                ),
+            }
+            for r in pairs(30)
+        ]
         result = artifact_check.check(rows)
         self.assertFalse(result["by_type"]["invented_citation"]["passes"])
         self.assertFalse(result["passes"])
@@ -612,16 +706,41 @@ class ArtifactCheck(unittest.TestCase):
         self.assertAlmostEqual(high, 0.5962, places=3)
 
 
-
 class ReviewSheet(unittest.TestCase):
     def fake(self, kind, category, question, flags=""):
-        return {"id": question, "hallucination_type": kind, "category": category, "question": question, "answer_real": "r", "answer_fake": "f", "real_span": "r", "fabricated_span": "f", "alt_fake_2": "", "alt_fake_3": "", "source_url": "u", "flags": flags}
+        return {
+            "id": question,
+            "hallucination_type": kind,
+            "category": category,
+            "question": question,
+            "answer_real": "r",
+            "answer_fake": "f",
+            "real_span": "r",
+            "fabricated_span": "f",
+            "alt_fake_2": "",
+            "alt_fake_3": "",
+            "source_url": "u",
+            "flags": flags,
+        }
 
     def test_sorted_with_empty_keep_notes_and_claim_flags(self):
-        fakes = [self.fake("wrong_number", "science", "b"), self.fake("invented_citation", "history", "c", "length_ratio_1.50"), self.fake("wrong_number", "geography", "a")]
-        rows = make_review.review_rows(fakes, [{"id": "c", "verdict": "wrong"}, {"id": "a", "verdict": "ok"}, {"id": "b", "verdict": "wrong", "recheck_verdict": "ok"}])
+        fakes = [
+            self.fake("wrong_number", "science", "b"),
+            self.fake("invented_citation", "history", "c", "length_ratio_1.50"),
+            self.fake("wrong_number", "geography", "a"),
+        ]
+        rows = make_review.review_rows(
+            fakes,
+            [
+                {"id": "c", "verdict": "wrong"},
+                {"id": "a", "verdict": "ok"},
+                {"id": "b", "verdict": "wrong", "recheck_verdict": "ok"},
+            ],
+        )
         self.assertEqual([r["question"] for r in rows], ["c", "a", "b"])
-        self.assertEqual([r["flags"] for r in rows], ["length_ratio_1.50;claim_wrong", "", ""])
+        self.assertEqual(
+            [r["flags"] for r in rows], ["length_ratio_1.50;claim_wrong", "", ""]
+        )
         self.assertEqual([r["length_diff"] for r in rows], [0, 0, 0])
         self.assertTrue(all(r["keep"] == r["notes"] == "" for r in rows))
 
@@ -630,8 +749,16 @@ class ReviewSheet(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as folder:
             review, fakes = Path(folder) / "review.csv", Path(folder) / "fakes.csv"
-            common.write_csv(fakes, [self.fake("wrong_number", "science", "q")], make_fakes.FAKE_FIELDS)
-            with mock.patch.object(make_review, "REVIEW", review), mock.patch.object(make_review, "FAKES", fakes), mock.patch.object(make_review, "CLAIMS", Path(folder) / "none.csv"):
+            common.write_csv(
+                fakes,
+                [self.fake("wrong_number", "science", "q")],
+                make_fakes.FAKE_FIELDS,
+            )
+            with (
+                mock.patch.object(make_review, "REVIEW", review),
+                mock.patch.object(make_review, "FAKES", fakes),
+                mock.patch.object(make_review, "CLAIMS", Path(folder) / "none.csv"),
+            ):
                 self.assertEqual(make_review.main(), 0)
                 rows = common.read_csv(review)
                 rows[0]["keep"] = "yes"
@@ -639,6 +766,78 @@ class ReviewSheet(unittest.TestCase):
                 with self.assertRaises(SystemExit):
                     make_review.main()
                 self.assertEqual(common.read_csv(review)[0]["keep"], "yes")
+
+
+class ReviewPasses(unittest.TestCase):
+    def test_kept_only_when_both_passes_agree_and_checked_by_id(self):
+        import tempfile
+
+        decisions = {
+            "a": ("yes", "yes"),
+            "b": ("alt2", "alt2"),
+            "c": ("yes", "alt2"),
+            "d": ("no", "no"),
+            "e": ("alt3", "no"),
+        }
+        with tempfile.TemporaryDirectory() as folder:
+            review, passes, fakes = (
+                Path(folder) / name
+                for name in ("review.csv", "passes.csv", "fakes.csv")
+            )
+            sheet = [
+                {
+                    **ReviewSheet.fake(None, "wrong_number", "science", i),
+                    "alt_fake_2": "g",
+                    "keep": "",
+                    "notes": "",
+                }
+                for i in decisions
+            ]
+            common.write_csv(review, sheet, list(sheet[0]))
+            common.write_csv(
+                passes,
+                [
+                    {"id": i, "pass": p, "decision": d[n], "reason": f"{p} says so."}
+                    for i, d in decisions.items()
+                    for n, p in enumerate("AB")
+                ],
+                ("id", "pass", "decision", "reason"),
+            )
+            common.write_csv(
+                fakes,
+                [
+                    {k: v for k, v in r.items() if k in make_fakes.FAKE_FIELDS}
+                    for r in sheet
+                ],
+                make_fakes.FAKE_FIELDS,
+            )
+            with (
+                mock.patch.object(finalize, "REVIEW", review),
+                mock.patch.object(finalize, "PASSES", passes),
+                mock.patch.object(make_fakes, "FAKES", fakes),
+            ):
+                finalize.combine()
+                rows = {r["id"]: r for r in common.read_csv(review)}
+                self.assertEqual(
+                    {i: r["keep"] for i, r in rows.items()},
+                    {"a": "yes", "b": "alt2", "c": "no", "d": "no", "e": "no"},
+                )
+                self.assertTrue(
+                    all(r["notes"] and "\n" not in r["notes"] for r in rows.values())
+                )
+                self.assertIn(
+                    "disagreed (A alt3, B no): B says so.", rows["e"]["notes"]
+                )
+                kept, problems = finalize.check()
+                self.assertEqual(
+                    [(r["id"], r["chosen_fake"]) for r in kept],
+                    [("a", "f"), ("b", "g")],
+                )
+                self.assertEqual(problems, [])
+                rows["a"]["keep"], rows["b"]["keep"] = "maybe", "alt3"
+                common.write_csv(review, rows.values(), list(sheet[0]))
+                self.assertEqual(len(finalize.check()[1]), 2)
+
 
 if __name__ == "__main__":
     unittest.main()

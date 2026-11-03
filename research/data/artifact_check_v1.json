@@ -2,31 +2,31 @@
   "input": "data/fakes_v1.csv",
   "passes": true,
   "overall": {
-    "pairs": 146,
+    "pairs": 195,
     "folds": 10,
     "seed": 20261101,
-    "accuracy": 0.4863013698630137,
+    "accuracy": 0.5025641025641026,
     "ci95": [
-      0.4066243258150366,
-      0.5666807926090387
+      0.4330186910440448,
+      0.5720104412386597
     ],
     "passes": true,
     "coefficients": {
-      "answer_length": -0.06877946343964711,
-      "span_length": -0.06877946343964711,
-      "digit_count": 0.3043988732474245,
-      "punctuation_count": -0.29027141705020726
+      "answer_length": -0.10496686164484045,
+      "span_length": -0.10496686164484045,
+      "digit_count": 0.28232807904908647,
+      "punctuation_count": -0.2647597938870092
     }
   },
   "by_type": {
     "wrong_number": {
-      "pairs": 34,
+      "pairs": 52,
       "folds": 10,
       "seed": 20261101,
       "accuracy": 0.5,
       "ci95": [
-        0.34069325532779604,
-        0.659306744672204
+        0.36885862863453955,
+        0.6311413713654604
       ],
       "passes": true,
       "coefficients": {
@@ -37,20 +37,20 @@
       }
     },
     "wrong_entity": {
-      "pairs": 39,
+      "pairs": 55,
       "folds": 10,
       "seed": 20261101,
-      "accuracy": 0.5128205128205128,
+      "accuracy": 0.41818181818181815,
       "ci95": [
-        0.3619936277532354,
-        0.6613482477597057
+        0.29737765668213967,
+        0.5496689636581857
       ],
       "passes": true,
       "coefficients": {
-        "answer_length": 0.12357541359042712,
-        "span_length": 0.12357541359042712,
+        "answer_length": -0.0423504072714221,
+        "span_length": -0.0423504072714221,
         "digit_count": 0.0,
-        "punctuation_count": -0.4403996737998052
+        "punctuation_count": -0.3810443499955159
       }
     },
     "wrong_date": {
@@ -71,18 +71,18 @@
       }
     },
     "invented_citation": {
-      "pairs": 34,
+      "pairs": 49,
       "folds": 10,
       "seed": 20261101,
-      "accuracy": 0.5882352941176471,
+      "accuracy": 0.5714285714285714,
       "ci95": [
-        0.422215937544422,
-        0.7363403173510689
+        0.432704929846029,
+        0.6997668101134018
       ],
       "passes": true,
       "coefficients": {
-        "answer_length": -0.3426816284345271,
-        "span_length": -0.3426816284345271,
+        "answer_length": -0.2537911335642415,
+        "span_length": -0.2537911335642415,
         "digit_count": 0.0,
         "punctuation_count": 0.0
       }

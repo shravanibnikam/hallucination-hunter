@@ -727,3 +727,243 @@ e9ea2f56-8180-4784-84a5-c21b9acc572e,3,20261101,55.90,kept,,
 bd538f3a-3d99-42c7-913f-3f91c1b769eb,1,20261101,"12,345",kept,,
 bd538f3a-3d99-42c7-913f-3f91c1b769eb,2,20261101,"13,467",kept,,
 bd538f3a-3d99-42c7-913f-3f91c1b769eb,3,20261101,"13,421",kept,,
+32f67687-7a63-44d2-9a11-721034c82000,1,20261101,Baryon dynamics analysis,rejected,citation: length outside 0.85 to 1.15 times the real title,length_ratio_0.62
+32f67687-7a63-44d2-9a11-721034c82000,2,20261101,Quantum field interactions,rejected,citation: length outside 0.85 to 1.15 times the real title,length_ratio_0.67
+32f67687-7a63-44d2-9a11-721034c82000,3,20261101,Particle symmetries investigation,rejected,citation: length outside 0.85 to 1.15 times the real title,
+32f67687-7a63-44d2-9a11-721034c82000,4,20261102,Quantum realms of quarks and leptons,kept,,
+32f67687-7a63-44d2-9a11-721034c82000,5,20261102,Nucleons interaction framework,rejected,citation: length outside 0.85 to 1.15 times the real title,
+32f67687-7a63-44d2-9a11-721034c82000,6,20261102,Subatomic particles dynamics analysis,kept,,
+ef838e50-03a3-4a48-a63b-9503e8e3f2f5,1,20261101,Genetic Drift Patterns Deeply,rejected,citation: length outside 0.85 to 1.15 times the real title,
+ef838e50-03a3-4a48-a63b-9503e8e3f2f5,2,20261101,Molecular Evolutionary Rates,rejected,citation: length outside 0.85 to 1.15 times the real title,
+ef838e50-03a3-4a48-a63b-9503e8e3f2f5,3,20261101,Molecular Evolutionary Dynamics,rejected,citation: length outside 0.85 to 1.15 times the real title,
+ef838e50-03a3-4a48-a63b-9503e8e3f2f5,4,20261102,Molecular Evolutionary Rate,rejected,citation: length outside 0.85 to 1.15 times the real title,length_ratio_0.68
+ef838e50-03a3-4a48-a63b-9503e8e3f2f5,5,20261102,Rate Genetic Diversity,rejected,citation: length outside 0.85 to 1.15 times the real title,length_ratio_0.55
+ef838e50-03a3-4a48-a63b-9503e8e3f2f5,6,20261102,Molecular Evolutionary Patterns,rejected,citation: length outside 0.85 to 1.15 times the real title,
+8a795d1c-455b-4055-a645-de6f86a97622,1,20261101,Upon genesis of cell division,kept,,
+8a795d1c-455b-4055-a645-de6f86a97622,2,20261101,On creation of mitotic entities,kept,,
+8a795d1c-455b-4055-a645-de6f86a97622,3,20261101,On genesis of cellular replication,kept,,
+8a795d1c-455b-4055-a645-de6f86a97622,4,20261102,On the genesis of binary cells,kept,,
+8a795d1c-455b-4055-a645-de6f86a97622,5,20261102,On the birth of division cells,kept,,
+8a795d1c-455b-4055-a645-de6f86a97622,6,20261102,On the creation of fission cells,kept,,
+9e82389a-8597-43f8-ac93-b08ae19fe61a,1,20261101,Transcriptional control in cellular metabolism,rejected,citation: length outside 0.85 to 1.15 times the real title,
+9e82389a-8597-43f8-ac93-b08ae19fe61a,2,20261101,Regulatory sequences in lipid synthesis,rejected,citation: length outside 0.85 to 1.15 times the real title,length_ratio_0.67
+9e82389a-8597-43f8-ac93-b08ae19fe61a,3,20261101,Gene expression patterns in enzymatic activity,rejected,citation: length outside 0.85 to 1.15 times the real title,
+9e82389a-8597-43f8-ac93-b08ae19fe61a,4,20261102,Cellular control in enzyme assembly,rejected,citation: length outside 0.85 to 1.15 times the real title,length_ratio_0.60
+9e82389a-8597-43f8-ac93-b08ae19fe61a,5,20261102,Regulatory sequences in tissue formation,rejected,citation: length outside 0.85 to 1.15 times the real title,length_ratio_0.69
+9e82389a-8597-43f8-ac93-b08ae19fe61a,6,20261102,Genetic pathways in lipid production,rejected,citation: length outside 0.85 to 1.15 times the real title,length_ratio_0.62
+5f895936-1516-40f2-bc88-6d9abaf4ced7,1,20261101,Encryption challenges future,kept,,
+5f895936-1516-40f2-bc88-6d9abaf4ced7,2,20261101,Cryptographic paradigm shifts,kept,,
+5f895936-1516-40f2-bc88-6d9abaf4ced7,3,20261101,Innovative cryptographic strategies,rejected,citation: length outside 0.85 to 1.15 times the real title,
+5f895936-1516-40f2-bc88-6d9abaf4ced7,4,20261102,Quantum realms in coding,rejected,citation: length outside 0.85 to 1.15 times the real title,
+5f895936-1516-40f2-bc88-6d9abaf4ced7,5,20261102,Symmetric keys in security,kept,,
+5f895936-1516-40f2-bc88-6d9abaf4ced7,6,20261102,Algorithmic patterns in encryption,kept,,
+3a8926c0-64b8-40a8-9980-d65946484f11,1,20261101,Algorithms of computation for vast collective data repositories,rejected,citation: length outside 0.85 to 1.15 times the real title,
+3a8926c0-64b8-40a8-9980-d65946484f11,2,20261101,Data structures for dynamic shared knowledge systems,kept,,
+3a8926c0-64b8-40a8-9980-d65946484f11,3,20261101,Framework of information exchange for extensive communal data reserves,rejected,citation: length outside 0.85 to 1.15 times the real title,
+3a8926c0-64b8-40a8-9980-d65946484f11,4,20261102,Data Structures for Dynamic Networks,rejected,"citation: format differs (capitalisation, subtitle colon or final punctuation)",length_ratio_0.67
+3a8926c0-64b8-40a8-9980-d65946484f11,5,20261102,Semantic Webs of Distributed Information Systems,rejected,"citation: format differs (capitalisation, subtitle colon or final punctuation)",
+3a8926c0-64b8-40a8-9980-d65946484f11,6,20261102,Algorithms for Efficient Data Storage Networks,rejected,"citation: format differs (capitalisation, subtitle colon or final punctuation)",
+3242a5b4-d6e5-4594-bbe3-7da3c7ca53b3,1,20261101,Stellar Mass Thresholds for Supernova Remnants,rejected,citation: length outside 0.85 to 1.15 times the real title,
+3242a5b4-d6e5-4594-bbe3-7da3c7ca53b3,2,20261101,Dynamics of Neutron Star Progenitors,kept,,
+3242a5b4-d6e5-4594-bbe3-7da3c7ca53b3,3,20261101,Gravitational Limits of Cosmic Dust Particles,rejected,citation: length outside 0.85 to 1.15 times the real title,
+3242a5b4-d6e5-4594-bbe3-7da3c7ca53b3,4,20261102,Stellar Mass Limits Analysis,rejected,citation: length outside 0.85 to 1.15 times the real title,
+3242a5b4-d6e5-4594-bbe3-7da3c7ca53b3,5,20261102,White Dwarf Composition Study,rejected,citation: length outside 0.85 to 1.15 times the real title,
+3242a5b4-d6e5-4594-bbe3-7da3c7ca53b3,6,20261102,Dwarf Star Mass Constraints,rejected,citation: length outside 0.85 to 1.15 times the real title,
+01f9f20a-9fa7-4a78-9747-e99f3d8095ed,1,20261101,Atomic Resonance by Frequency Methods,rejected,citation: length outside 0.85 to 1.15 times the real title,length_ratio_0.65
+01f9f20a-9fa7-4a78-9747-e99f3d8095ed,2,20261101,Hydrogen Interactions by Wave Techniques,rejected,citation: length outside 0.85 to 1.15 times the real title,
+01f9f20a-9fa7-4a78-9747-e99f3d8095ed,3,20261101,Structure Variations of Atoms by Microwave Processes,kept,,
+01f9f20a-9fa7-4a78-9747-e99f3d8095ed,4,20261102,Quantum Oscillations of Plasma by Infrared Techniques,kept,,
+01f9f20a-9fa7-4a78-9747-e99f3d8095ed,5,20261102,Harmonic Vibrations of Atomic Structures by Laser Experimentation,kept,,
+01f9f20a-9fa7-4a78-9747-e99f3d8095ed,6,20261102,Electron Transitions in Molecules by Ultraviolet Spectroscopy Analysis,rejected,citation: length outside 0.85 to 1.15 times the real title,
+de46d220-c91e-4113-bc0e-8cb67e71372b,1,20261101,Cultural Artifacts and the Historian,kept,,
+de46d220-c91e-4113-bc0e-8cb67e71372b,2,20261101,Early Periods and the Scholar,rejected,citation: length outside 0.85 to 1.15 times the real title,
+de46d220-c91e-4113-bc0e-8cb67e71372b,3,20261101,Byzantine Times and the Antiquary,kept,,
+de46d220-c91e-4113-bc0e-8cb67e71372b,4,20261102,Medieval Artifacts and Historiography,kept,,
+de46d220-c91e-4113-bc0e-8cb67e71372b,5,20261102,Classical Works and Antiquity Studies,kept,,
+de46d220-c91e-4113-bc0e-8cb67e71372b,6,20261102,Early Civilizations and Archaeological Inquiry,rejected,citation: length outside 0.85 to 1.15 times the real title,length_ratio_1.31
+b968bb8a-eccd-4e3e-9003-5ad701e7d35c,1,20261101,Societal Shifts and Market Evolution: Paradigms for Cross-Cultural Examination,rejected,citation: punctuation differs from the real title,
+b968bb8a-eccd-4e3e-9003-5ad701e7d35c,2,20261101,The Emergence and Eventual Collapse of Global Trade Dynamics: Theoretical Frameworks for Analysis,kept,,
+b968bb8a-eccd-4e3e-9003-5ad701e7d35c,3,20261101,Patterns of Economic Growth and Decline: Comparative Insights for Social Scholars,kept,,
+b968bb8a-eccd-4e3e-9003-5ad701e7d35c,4,20261102,Global Economic Shifts: Precursors to Systemic Decline,rejected,citation: length outside 0.85 to 1.15 times the real title,length_ratio_0.59
+b968bb8a-eccd-4e3e-9003-5ad701e7d35c,5,20261102,Historical Patterns of Capital: A Comparative Inquiry,rejected,citation: length outside 0.85 to 1.15 times the real title,length_ratio_0.58
+b968bb8a-eccd-4e3e-9003-5ad701e7d35c,6,20261102,Capitalist Evolutions: Analyzing the Impending Crisis,rejected,citation: length outside 0.85 to 1.15 times the real title,length_ratio_0.58
+974e3d6e-f377-489e-8b93-c78bfcdc3a26,1,20261101,Patterns of Economic Growth and Consumer Behavior Shifts,kept,,
+974e3d6e-f377-489e-8b93-c78bfcdc3a26,2,20261101,Evolving Industries and Productive Societal Transformations,kept,,
+974e3d6e-f377-489e-8b93-c78bfcdc3a26,3,20261101,Historical Industry Analysis and Work Ethic Revolutions,kept,,
+974e3d6e-f377-489e-8b93-c78bfcdc3a26,4,20261102,Economic Shift and Resourceful Uprising,rejected,citation: length outside 0.85 to 1.15 times the real title,length_ratio_0.70
+974e3d6e-f377-489e-8b93-c78bfcdc3a26,5,20261102,Innovation Surge and Productive Enlightenment,rejected,citation: length outside 0.85 to 1.15 times the real title,
+974e3d6e-f377-489e-8b93-c78bfcdc3a26,6,20261102,Revolutionary Transformation and Diligent Movement,kept,,
+076057e5-4eb0-411b-92b0-912ad8b681f1,1,20261101,Exploring the Ascension and Purpose of the Sanctified Individuals in Ancient Times,rejected,citation: length outside 0.85 to 1.15 times the real title,length_ratio_1.49
+076057e5-4eb0-411b-92b0-912ad8b681f1,2,20261101,Discovering the Emergence and Role of the Divinely Connected Figures in Early History,rejected,citation: length outside 0.85 to 1.15 times the real title,length_ratio_1.55
+076057e5-4eb0-411b-92b0-912ad8b681f1,3,20261101,Investigating the Ascendancy and Function of the Spiritual Leaders in Bygone Eras,rejected,citation: length outside 0.85 to 1.15 times the real title,length_ratio_1.47
+076057e5-4eb0-411b-92b0-912ad8b681f1,4,20261102,The Emergence and Role of Artisans in Medieval Society,kept,,
+076057e5-4eb0-411b-92b0-912ad8b681f1,5,20261102,The Growth and Impact of Religious Figures in Early Civilization,rejected,citation: length outside 0.85 to 1.15 times the real title,
+076057e5-4eb0-411b-92b0-912ad8b681f1,6,20261102,The Development and Significance of Charismatic Leaders in Ancient Times,rejected,citation: length outside 0.85 to 1.15 times the real title,length_ratio_1.31
+8e2df7f6-0736-484e-b035-ef64407175e3,1,20261101,A Scholar's Personal Archives,rejected,citation: punctuation differs from the real title,
+8e2df7f6-0736-484e-b035-ef64407175e3,2,20261101,Historians Unite for Knowledge,rejected,citation: length outside 0.85 to 1.15 times the real title,
+8e2df7f6-0736-484e-b035-ef64407175e3,3,20261101,Every Citizen's Ancient Chronicles,rejected,citation: punctuation differs from the real title,length_ratio_1.31
+8e2df7f6-0736-484e-b035-ef64407175e3,4,20261102,Time's Own Sage,rejected,citation: punctuation differs from the real title,length_ratio_0.58
+8e2df7f6-0736-484e-b035-ef64407175e3,5,20261102,History's Silent Voice,rejected,citation: punctuation differs from the real title,
+8e2df7f6-0736-484e-b035-ef64407175e3,6,20261102,Chronicles Each Man's Role,rejected,citation: punctuation differs from the real title,
+d11e7a47-0e3a-4c55-8576-fd7404b85d75,1,20261101,Perceptions and Analysis in Political Thought,kept,,
+d11e7a47-0e3a-4c55-8576-fd7404b85d75,2,20261101,Historical Context and Interpretation of Philosophy,kept,,
+d11e7a47-0e3a-4c55-8576-fd7404b85d75,3,20261101,Exploring Ideas and Their Significance in Intellectual History,rejected,citation: length outside 0.85 to 1.15 times the real title,
+d11e7a47-0e3a-4c55-8576-fd7404b85d75,4,20261102,Cognition and Perception in Ideational Evolution,kept,,
+d11e7a47-0e3a-4c55-8576-fd7404b85d75,5,20261102,Thoughts and Recognition in Historical Concepts,kept,,
+d11e7a47-0e3a-4c55-8576-fd7404b85d75,6,20261102,Concepts and Comprehension in Idea Lineage,kept,,
+62212aa2-85f9-4959-ab8d-95e1e5f14a72,1,20261101,Britannia's Silent Discourse: A Dispute,rejected,citation: punctuation differs from the real title,
+62212aa2-85f9-4959-ab8d-95e1e5f14a72,2,20261101,Islands' Divergence: An Inquiry,rejected,citation: punctuation differs from the real title,
+62212aa2-85f9-4959-ab8d-95e1e5f14a72,3,20261101,Nations' Contrast: A Debate,rejected,citation: punctuation differs from the real title,
+62212aa2-85f9-4959-ab8d-95e1e5f14a72,4,20261102,Cultural Identity and Differentiation: A Discourse,rejected,citation: length outside 0.85 to 1.15 times the real title,length_ratio_1.32
+62212aa2-85f9-4959-ab8d-95e1e5f14a72,5,20261102,Britishness and Alienation: A Disputation,kept,,
+62212aa2-85f9-4959-ab8d-95e1e5f14a72,6,20261102,Nationalism and Distinctness: An Exegesis,kept,,
+24d18221-3663-4c54-85e8-a513d281286f,1,20261101,Exploration of Global Flora Classification Via Basic Meteorological Indicators,rejected,citation: length outside 0.85 to 1.15 times the real title,
+24d18221-3663-4c54-85e8-a513d281286f,2,20261101,Analysis of Earth's Vegetation Patterns Through Simple Atmospheric Measurements,rejected,citation: punctuation differs from the real title,
+24d18221-3663-4c54-85e8-a513d281286f,3,20261101,Assessment of Planetary Plant Varieties Utilizing Fundamental Climatic Metrics,rejected,citation: length outside 0.85 to 1.15 times the real title,
+24d18221-3663-4c54-85e8-a513d281286f,4,20261102,Analysis of Oceanic Ecosystems From Complex Meteorological Patterns,kept,,
+24d18221-3663-4c54-85e8-a513d281286f,5,20261102,Estimation of Global Geological Structures From Fundamental Atmospheric Variables,rejected,citation: length outside 0.85 to 1.15 times the real title,
+24d18221-3663-4c54-85e8-a513d281286f,6,20261102,Classification of Astronomical Bodies From Basic Geological Indicators,kept,,
+36c8c972-5e73-4331-98c0-264928b6db1c,1,20261101,Tectonic Shifts in Subterranean Realms,kept,,
+36c8c972-5e73-4331-98c0-264928b6db1c,2,20261101,Mantle Flow Dynamics Unveiled,rejected,citation: length outside 0.85 to 1.15 times the real title,
+36c8c972-5e73-4331-98c0-264928b6db1c,3,20261101,Geothermal Patterns in Earth's Depths,rejected,citation: punctuation differs from the real title,
+36c8c972-5e73-4331-98c0-264928b6db1c,4,20261102,Mantle Dynamics Shifts,rejected,citation: length outside 0.85 to 1.15 times the real title,length_ratio_0.59
+36c8c972-5e73-4331-98c0-264928b6db1c,5,20261102,Earth's Crust Fracture Analysis,rejected,citation: punctuation differs from the real title,
+36c8c972-5e73-4331-98c0-264928b6db1c,6,20261102,Plasma Jets in Core Exploration,rejected,citation: length outside 0.85 to 1.15 times the real title,
+be1114ef-01b5-47c6-8626-0d1deed9cfd9,1,20261101,The Notions of Cultural Shift,rejected,citation: length outside 0.85 to 1.15 times the real title,
+be1114ef-01b5-47c6-8626-0d1deed9cfd9,2,20261101,The Hypothesis of Urban Patterns,rejected,citation: length outside 0.85 to 1.15 times the real title,
+be1114ef-01b5-47c6-8626-0d1deed9cfd9,3,20261101,The Theory of Population Dynamics,rejected,citation: length outside 0.85 to 1.15 times the real title,
+be1114ef-01b5-47c6-8626-0d1deed9cfd9,4,20261102,Migration Patterns Analysis,rejected,citation: length outside 0.85 to 1.15 times the real title,length_ratio_0.66
+be1114ef-01b5-47c6-8626-0d1deed9cfd9,5,20261102,Transition Stages Hypothesis,rejected,citation: length outside 0.85 to 1.15 times the real title,length_ratio_0.68
+be1114ef-01b5-47c6-8626-0d1deed9cfd9,6,20261102,Population Shift Theories,rejected,citation: length outside 0.85 to 1.15 times the real title,length_ratio_0.61
+c2ec1b6d-88fe-4ac0-a4db-92249bedd7a4,1,20261101,Landslide Patterns and Impact Analysis,rejected,citation: length outside 0.85 to 1.15 times the real title,length_ratio_0.67
+c2ec1b6d-88fe-4ac0-a4db-92249bedd7a4,2,20261101,Erosion Rates and Environmental Effects,rejected,citation: length outside 0.85 to 1.15 times the real title,length_ratio_0.68
+c2ec1b6d-88fe-4ac0-a4db-92249bedd7a4,3,20261101,Tectonic Shifts and Geological Consequences,rejected,citation: length outside 0.85 to 1.15 times the real title,
+c2ec1b6d-88fe-4ac0-a4db-92249bedd7a4,4,20261102,Erosion Patterns in Landform Dynamics,rejected,citation: length outside 0.85 to 1.15 times the real title,length_ratio_0.65
+c2ec1b6d-88fe-4ac0-a4db-92249bedd7a4,5,20261102,Fluvial Processes in Sediment Transport,rejected,citation: length outside 0.85 to 1.15 times the real title,length_ratio_0.68
+c2ec1b6d-88fe-4ac0-a4db-92249bedd7a4,6,20261102,Tectonic Activity and Landscape Evolution,rejected,citation: length outside 0.85 to 1.15 times the real title,
+6936a570-153c-4ee8-ae6e-44a13adc1c08,1,20261101,Horizons: A Spatial Inquiry,rejected,citation: length outside 0.85 to 1.15 times the real title,
+6936a570-153c-4ee8-ae6e-44a13adc1c08,2,20261101,Geography's Essence: A Reflective Study,rejected,citation: punctuation differs from the real title,
+6936a570-153c-4ee8-ae6e-44a13adc1c08,3,20261101,Mapping Realms: An Intuitive Analysis,kept,,
+6936a570-153c-4ee8-ae6e-44a13adc1c08,4,20261102,Landscapes: A Spatial Inquiry,kept,,
+6936a570-153c-4ee8-ae6e-44a13adc1c08,5,20261102,Humanity's Domain: A Geographical Insight,rejected,citation: punctuation differs from the real title,
+6936a570-153c-4ee8-ae6e-44a13adc1c08,6,20261102,Realms of Perception: Geographical Contemplation,rejected,citation: length outside 0.85 to 1.15 times the real title,length_ratio_1.41
+f73b1440-a518-4853-bc0a-ff5d1b31f106,1,20261101,"1,625",kept,,
+f73b1440-a518-4853-bc0a-ff5d1b31f106,2,20261101,"1,635",kept,,
+f73b1440-a518-4853-bc0a-ff5d1b31f106,3,20261101,"1,655",kept,,
+c54a0357-ded6-4d5b-a1de-85771ada51cc,1,20261101,"11,607",kept,,
+c54a0357-ded6-4d5b-a1de-85771ada51cc,2,20261101,"12,707",kept,,
+c54a0357-ded6-4d5b-a1de-85771ada51cc,3,20261101,"13,607",kept,,
+0956b2c5-6159-4b68-9876-3a955f368889,1,20261101,"19,800",rejected,number: round number for a non-round real value,
+0956b2c5-6159-4b68-9876-3a955f368889,2,20261101,"19,820",rejected,number: round number for a non-round real value,
+0956b2c5-6159-4b68-9876-3a955f368889,3,20261101,"19,810",rejected,number: round number for a non-round real value,
+13a071e0-6184-4598-baf1-ebec246c295b,1,20261101,459,kept,,
+13a071e0-6184-4598-baf1-ebec246c295b,2,20261101,602,kept,,
+13a071e0-6184-4598-baf1-ebec246c295b,3,20261101,723,kept,,
+bdef1702-f471-4025-866c-40abf8d9711c,1,20261101,123,kept,,
+bdef1702-f471-4025-866c-40abf8d9711c,2,20261101,234,kept,,
+bdef1702-f471-4025-866c-40abf8d9711c,3,20261101,345,kept,,
+f0f6cca4-3625-4394-b811-abf48f4b53a1,1,20261101,"7,264",kept,,
+f0f6cca4-3625-4394-b811-abf48f4b53a1,2,20261101,"8,364",kept,,
+f0f6cca4-3625-4394-b811-abf48f4b53a1,3,20261101,"9,264",kept,,
+db7f12e1-917c-4c1f-828c-28c867bfbd2e,1,20261101,"3,626",kept,,
+db7f12e1-917c-4c1f-828c-28c867bfbd2e,2,20261101,"3,826",kept,,
+db7f12e1-917c-4c1f-828c-28c867bfbd2e,3,20261101,"3,526",kept,,
+bdc16dd2-4ccc-4b71-9d65-c0f6cd2a38f6,1,20261101,670,rejected,number: round number for a non-round real value,
+bdc16dd2-4ccc-4b71-9d65-c0f6cd2a38f6,2,20261101,765,kept,,
+bdc16dd2-4ccc-4b71-9d65-c0f6cd2a38f6,3,20261101,820,rejected,number: round number for a non-round real value; fabricated span appears in the source article,
+b5340fdd-2f36-465c-bf42-07daff5cb767,1,20261101,"1,700",rejected,number: round number for a non-round real value,
+b5340fdd-2f36-465c-bf42-07daff5cb767,2,20261101,"1,725",kept,,
+b5340fdd-2f36-465c-bf42-07daff5cb767,3,20261101,"1,710",rejected,number: round number for a non-round real value,
+13d1b110-379b-4e15-80bf-ae8ffccc7c46,1,20261101,"3,670",rejected,number: round number for a non-round real value,
+13d1b110-379b-4e15-80bf-ae8ffccc7c46,2,20261101,"3,675",kept,,
+13d1b110-379b-4e15-80bf-ae8ffccc7c46,3,20261101,"3,677",kept,,
+15b392a1-ee04-4ba1-9699-3a70729cff34,1,20261101,"2,342",kept,,
+15b392a1-ee04-4ba1-9699-3a70729cff34,2,20261101,"3,421",kept,,
+15b392a1-ee04-4ba1-9699-3a70729cff34,3,20261101,"3,423",kept,,
+0c877818-d6ef-4248-addc-fc0a8540eedd,1,20261101,"2,621",kept,,
+0c877818-d6ef-4248-addc-fc0a8540eedd,2,20261101,"2,624",kept,,
+0c877818-d6ef-4248-addc-fc0a8540eedd,3,20261101,"2,625",kept,,
+22e6370d-8269-483a-9960-83502c2ae9ee,1,20261101,"1,660",rejected,number: round number for a non-round real value,
+22e6370d-8269-483a-9960-83502c2ae9ee,2,20261101,"1,670",rejected,number: round number for a non-round real value,
+22e6370d-8269-483a-9960-83502c2ae9ee,3,20261101,"1,678",kept,,
+abedf2e9-ea11-4a13-99fe-e84c664be259,1,20261101,"2,999",kept,,
+abedf2e9-ea11-4a13-99fe-e84c664be259,2,20261101,"3,018",kept,,
+abedf2e9-ea11-4a13-99fe-e84c664be259,3,20261101,"3,027",kept,,
+296b71bf-bf4b-4dd1-ba46-4a125ee91d5f,1,20261101,"4,265",kept,,
+296b71bf-bf4b-4dd1-ba46-4a125ee91d5f,2,20261101,"5,482",kept,,
+296b71bf-bf4b-4dd1-ba46-4a125ee91d5f,3,20261101,"5,276",kept,,
+62ced78d-945d-428f-8493-077f46ad9a77,1,20261101,"12,569",kept,,
+62ced78d-945d-428f-8493-077f46ad9a77,2,20261101,"15,659",kept,,
+62ced78d-945d-428f-8493-077f46ad9a77,3,20261101,"16,509",kept,,
+d41d24cb-b16c-4483-a115-88859631b86d,1,20261101,123,kept,,
+d41d24cb-b16c-4483-a115-88859631b86d,2,20261101,456,kept,,
+d41d24cb-b16c-4483-a115-88859631b86d,3,20261101,789,kept,,
+1ca10198-1691-40a7-b00a-8a564e768a1a,1,20261101,99925,rejected,"number: unit, formatting or digit count differs",
+1ca10198-1691-40a7-b00a-8a564e768a1a,2,20261101,101326,rejected,"number: unit, formatting or digit count differs",
+1ca10198-1691-40a7-b00a-8a564e768a1a,3,20261101,101324,rejected,"number: unit, formatting or digit count differs",
+72d7b83e-8fed-4c7c-9fa8-c98f41d7ba1d,1,20261101,"4,820",rejected,number: round number for a non-round real value,
+72d7b83e-8fed-4c7c-9fa8-c98f41d7ba1d,2,20261101,"4,822",kept,,
+72d7b83e-8fed-4c7c-9fa8-c98f41d7ba1d,3,20261101,"4,823",kept,,
+c4291c7c-cc52-44df-80ce-cc192da71595,1,20261101,202,rejected,fabricated span appears in the source article,
+c4291c7c-cc52-44df-80ce-cc192da71595,2,20261101,322,kept,,
+c4291c7c-cc52-44df-80ce-cc192da71595,3,20261101,232,kept,,
+1c549173-d16c-4542-a317-658016f1e3d2,1,20261101,Nickel,rejected,fabricated span appears in the source article,
+1c549173-d16c-4542-a317-658016f1e3d2,2,20261101,Iridium,kept,,
+1c549173-d16c-4542-a317-658016f1e3d2,3,20261101,Gadolinium,kept,,
+c23dcbb4-c87e-49ad-b9a7-db296fca5c82,1,20261101,Iron,rejected,fabricated span appears in the source article,length_ratio_0.44
+c23dcbb4-c87e-49ad-b9a7-db296fca5c82,2,20261101,Zinc,kept,,length_ratio_0.44
+c23dcbb4-c87e-49ad-b9a7-db296fca5c82,3,20261101,Copper,kept,,length_ratio_0.67
+cc8797b8-99a8-4d82-8a5f-b182faeb15f1,1,20261101,Gallium,kept,,
+cc8797b8-99a8-4d82-8a5f-b182faeb15f1,2,20261101,Selenium,kept,,
+cc8797b8-99a8-4d82-8a5f-b182faeb15f1,3,20261101,Antimony,kept,,
+fb0f91ad-ade8-4c98-989c-8e089ef2585f,1,20261101,Uranium,kept,,
+fb0f91ad-ade8-4c98-989c-8e089ef2585f,2,20261101,Tellurium,kept,,
+fb0f91ad-ade8-4c98-989c-8e089ef2585f,3,20261101,Polonium,kept,,
+67088377-1d42-4024-abed-b6eb5725ed23,1,20261101,Nickel,rejected,fabricated span appears in the source article,
+67088377-1d42-4024-abed-b6eb5725ed23,2,20261101,Iron,kept,,length_ratio_0.67
+67088377-1d42-4024-abed-b6eb5725ed23,3,20261101,Zinc,rejected,fabricated span appears in the source article,length_ratio_0.67
+c06b5233-1308-467c-82da-d40c12a84877,1,20261101,Sylvite,rejected,fabricated span appears in the source article,
+c06b5233-1308-467c-82da-d40c12a84877,2,20261101,Anglesite,kept,,length_ratio_1.50
+c06b5233-1308-467c-82da-d40c12a84877,3,20261101,Gypsum,rejected,fabricated span appears in the source article,
+f159d551-2242-411e-bf8c-9fa9b21e553f,1,20261101,Azurite,kept,,
+f159d551-2242-411e-bf8c-9fa9b21e553f,2,20261101,Malachite,kept,,
+f159d551-2242-411e-bf8c-9fa9b21e553f,3,20261101,Chrysocolla,kept,,length_ratio_1.38
+6abb6420-dfb5-444e-b607-edd22361c50f,1,20261101,Talc,kept,,length_ratio_0.67
+6abb6420-dfb5-444e-b607-edd22361c50f,2,20261101,Sylvite,kept,,
+6abb6420-dfb5-444e-b607-edd22361c50f,3,20261101,Ammonium Chloride,rejected,entity: not the same kind of thing (Wikidata instance-of differs),length_ratio_2.83
+345a03ca-a7f4-4e99-9466-88336afab4c5,1,20261101,Saturn,kept,,
+345a03ca-a7f4-4e99-9466-88336afab4c5,2,20261101,Uranus,kept,,
+345a03ca-a7f4-4e99-9466-88336afab4c5,3,20261101,Neptune,rejected,fabricated span appears in the source article,
+8e111fed-dc96-485b-acfd-280349543dd7,1,20261101,Tycho Nebula,rejected,entity: fake has no unambiguous Wikipedia article,
+8e111fed-dc96-485b-acfd-280349543dd7,2,20261101,Ghost Nebula,rejected,entity: not the same kind of thing (Wikidata instance-of differs),
+8e111fed-dc96-485b-acfd-280349543dd7,3,20261101,Crab-Lite Nebula,rejected,entity: fake has no unambiguous Wikipedia article,length_ratio_1.45
+6639cc69-0474-40bd-a1fd-9b849a6afdb2,1,20261101,Apatosaurus,rejected,fabricated span appears in the source article,
+6639cc69-0474-40bd-a1fd-9b849a6afdb2,2,20261101,Allosaurus,rejected,fabricated span appears in the source article,
+6639cc69-0474-40bd-a1fd-9b849a6afdb2,3,20261101,Brachiosaurus,rejected,fabricated span appears in the source article,
+a418af38-dee8-40e5-9b38-8fd6030c795d,1,20261101,Velociraptor,kept,,
+a418af38-dee8-40e5-9b38-8fd6030c795d,2,20261101,Stegosaurus,rejected,fabricated span appears in the source article,
+a418af38-dee8-40e5-9b38-8fd6030c795d,3,20261101,Pachycephalosaurus,kept,,length_ratio_1.38
+2a8a3dd4-9537-40e4-8326-230c8c3e67c7,1,20261101,Brazil,kept,,
+2a8a3dd4-9537-40e4-8326-230c8c3e67c7,2,20261101,Chile,kept,,
+2a8a3dd4-9537-40e4-8326-230c8c3e67c7,3,20261101,Nepal,kept,,
+722b461b-820e-40a4-9ca2-7ce53a29313a,1,20261101,Armenia,kept,,length_ratio_0.58
+722b461b-820e-40a4-9ca2-7ce53a29313a,2,20261101,Afghanistan,kept,,
+722b461b-820e-40a4-9ca2-7ce53a29313a,3,20261101,Bhutan,kept,,length_ratio_0.50
+fdb6a358-d7e4-4f8b-a214-520fb466e6dc,1,20261101,Portland,rejected,entity: fake has no unambiguous Wikipedia article,
+fdb6a358-d7e4-4f8b-a214-520fb466e6dc,2,20261101,Denver,kept,,
+fdb6a358-d7e4-4f8b-a214-520fb466e6dc,3,20261101,Atlanta,kept,,
+5ed6011b-91ea-4897-9681-e9e6ea849ea6,1,20261101,Paris,kept,,length_ratio_0.50
+5ed6011b-91ea-4897-9681-e9e6ea849ea6,2,20261101,Berlin,kept,,length_ratio_0.60
+5ed6011b-91ea-4897-9681-e9e6ea849ea6,3,20261101,Amsterdam,kept,,
+e9541527-2f0b-4c4a-bbfd-6c5f20ba2bd3,1,20261101,Amazon River,kept,,
+e9541527-2f0b-4c4a-bbfd-6c5f20ba2bd3,2,20261101,Nile River,kept,,
+e9541527-2f0b-4c4a-bbfd-6c5f20ba2bd3,3,20261101,Mississippi River,kept,,
+b65d644d-46f9-4b47-b978-641cd9c4f712,1,20261101,Thames,kept,,
+b65d644d-46f9-4b47-b978-641cd9c4f712,2,20261101,Nile,kept,,
+b65d644d-46f9-4b47-b978-641cd9c4f712,3,20261101,Yenisei,kept,,length_ratio_1.40
+c14d7102-305b-4007-b375-735261384727,1,20261101,Lake Heho,rejected,entity: fake has no unambiguous Wikipedia article,
+c14d7102-305b-4007-b375-735261384727,2,20261101,Lake Ajara,rejected,entity: fake has no unambiguous Wikipedia article,
+c14d7102-305b-4007-b375-735261384727,3,20261101,Lake Faguibine,rejected,entity: not the same kind of thing (Wikidata instance-of differs),length_ratio_1.56
+e8a18bbc-400b-46db-bbe6-2477089e5323,1,20261101,Agua Tibia,rejected,entity: fake has no unambiguous Wikipedia article,
+e8a18bbc-400b-46db-bbe6-2477089e5323,2,20261101,La Peak,rejected,entity: fake has no unambiguous Wikipedia article,length_ratio_0.64
+e8a18bbc-400b-46db-bbe6-2477089e5323,3,20261101,Pico Tenerife,rejected,entity: fake has no unambiguous Wikipedia article,
