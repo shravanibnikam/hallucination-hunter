@@ -2,20 +2,20 @@
   "input": "data/fakes_v1.csv",
   "passes": true,
   "overall": {
-    "pairs": 195,
+    "pairs": 214,
     "folds": 10,
     "seed": 20261101,
-    "accuracy": 0.5025641025641026,
+    "accuracy": 0.5467289719626168,
     "ci95": [
-      0.4330186910440448,
-      0.5720104412386597
+      0.47979350842098856,
+      0.6120163798468743
     ],
     "passes": true,
     "coefficients": {
-      "answer_length": -0.10496686164484045,
-      "span_length": -0.10496686164484045,
-      "digit_count": 0.28232807904908647,
-      "punctuation_count": -0.2647597938870092
+      "answer_length": -0.11094605362685957,
+      "span_length": -0.11094605362685957,
+      "digit_count": 0.274614236373511,
+      "punctuation_count": -0.25710671243436806
     }
   },
   "by_type": {
@@ -71,18 +71,18 @@
       }
     },
     "invented_citation": {
-      "pairs": 49,
+      "pairs": 68,
       "folds": 10,
       "seed": 20261101,
-      "accuracy": 0.5714285714285714,
+      "accuracy": 0.5882352941176471,
       "ci95": [
-        0.432704929846029,
-        0.6997668101134018
+        0.46961466660873613,
+        0.6974198032762319
       ],
       "passes": true,
       "coefficients": {
-        "answer_length": -0.2537911335642415,
-        "span_length": -0.2537911335642415,
+        "answer_length": -0.22797125431091253,
+        "span_length": -0.22797125431091253,
         "digit_count": 0.0,
         "punctuation_count": 0.0
       }

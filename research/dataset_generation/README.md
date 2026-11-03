@@ -8,7 +8,7 @@ Everything here is Python, needs no API key, account or payment, and writes its 
 
 No human reviewed the rows. The review was done by two independent AI passes, each source-quoted, and a row is kept only when both passes agree.
 
-`research/data/review_v1.csv` has one row per candidate with a passing fake (195 rows, sorted by `hallucination_type`, then `category`). For each row, two passes, A and B, each decided `yes`, `alt2`, `alt3` or `no`. Each pass of each type was a separate Claude subagent (`claude-opus-5-5`) started fresh, told not to open the other pass's output, `claims_v1.csv` or `review_v1_passes.csv`, and given the same instructions:
+`research/data/review_v1.csv` has one row per candidate with a passing fake (214 rows, sorted by `hallucination_type`, then `category`). For each row, two passes, A and B, each decided `yes`, `alt2`, `alt3` or `no`. Each pass of each type was a separate Claude subagent (`claude-opus-5-5`) started fresh, told not to open the other pass's output, `claims_v1.csv` or `review_v1_passes.csv`, and given the same instructions:
 
 1. Real answer: split `answer_real` into its claims and, for every claim, quote the sentence or infobox line from the source that supports it (the stage 1 Wikipedia revision, or for citations the Crossref record and the publisher page the DOI resolves to). Any claim without a supporting quote fails the row. Never rely on your own knowledge.
 2. Choose `no` if the source gives varying figures or accounts for a claim, or if a knowledgeable player could reasonably think the real answer is wrong.
@@ -27,17 +27,17 @@ Both passes, with every claim's quote, a verdict on each fake and a one-sentence
 | `alt3` | Use `alt_fake_3` instead. |
 | `no` | Drop the candidate. |
 
-Agreement and kept rows, including the 49 top-up rows that got a fake (stage 1 explains the top-up):
+Agreement and kept rows, including the 68 top-up rows that got a fake (stage 1 explains the top-ups):
 
 | Type | Rows | Passes agree | Kept | science | geography | history |
 |---|---|---|---|---|---|---|
 | `wrong_number` | 52 | 46 (88%) | 28 | 11 | 10 | 7 |
 | `wrong_entity` | 55 | 51 (93%) | 31 | 12 | 10 | 9 |
 | `wrong_date` | 39 | 37 (95%) | 31 | 11 | 10 | 10 |
-| `invented_citation` | 49 | 45 (92%) | 16 | 5 | 5 | 6 |
-| All | 195 | 179 (92%) | 106 | | | |
+| `invented_citation` | 68 | 62 (91%) | 30 | 9 | 11 | 10 |
+| All | 214 | 196 (92%) | 120 | | | |
 
-The selection needs 20 kept rows per type. `invented_citation` has 16 after its 20-candidate top-up, so nothing has been selected.
+The selection needs 20 kept rows per type. After the first top-up `invented_citation` had 16, so a second round of 20 citations was added with the same design.
 
 Other columns: `length_diff` is the main fake span's length minus the real span's, in characters. `flags` lists `length_ratio_…` (the fake is much shorter or longer than the real span; `alt2:`/`alt3:` for an alternate), `crossref_year_…` (the answer's year is one off Crossref's) and `claim_wrong` or `claim_unverified` from the fact check in stage 4.
 
@@ -56,7 +56,7 @@ Network access is needed for the English Wikipedia and Wikidata APIs and the Cro
 
 ## Stage 1: candidate real answers
 
-Input: `research/data/candidates_v1.csv`: 160 candidates (40 per type, split 14/13/13 across `science`, `geography` and `history`), then 40 more for margin where checks are strict: 12 `invented_citation` (6 science, 6 geography), 20 `wrong_entity` (10 geography, 10 history) and 8 `wrong_number` (history), 200 in total. After the review passes left three types below 20 kept rows, 60 more were added, 20 per short type: 20 `invented_citation` (8 science, 7 history, 5 geography), 20 `wrong_number` (10 science, 10 geography) and 20 `wrong_entity` (12 science, 8 geography), 260 in total. Columns: `id`, `hallucination_type`, `category`, `question`, `answer_real`, `real_span`, `source_url`. Every row has a UUID that later stages keep.
+Input: `research/data/candidates_v1.csv`: 160 candidates (40 per type, split 14/13/13 across `science`, `geography` and `history`), then 40 more for margin where checks are strict: 12 `invented_citation` (6 science, 6 geography), 20 `wrong_entity` (10 geography, 10 history) and 8 `wrong_number` (history), 200 in total. After the review passes left three types below 20 kept rows, 60 more were added, 20 per short type: 20 `invented_citation` (8 science, 7 history, 5 geography), 20 `wrong_number` (10 science, 10 geography) and 20 `wrong_entity` (12 science, 8 geography), 260 in total. Citations still had only 16 kept rows, so a second round of 20 citations (7 science, 8 geography, 5 history) was added the same way, 280 in total. Columns: `id`, `hallucination_type`, `category`, `question`, `answer_real`, `real_span`, `source_url`. Every row has a UUID that later stages keep.
 
 Provenance: the candidates were written by Claude (`claude-opus-5-5`) in a Claude Code session, from its own knowledge, following the rules below. They were not copied from Wikipedia; Wikipedia and Crossref are used only to check them. No topic appears twice, so one item never gives away another. The 28 entity and number candidates added last were drafted by three Claude subagents (`claude-opus-5-5`), one per type and category, under the same rules; each draft passed this stage's format and source checks and a Wikidata lookup before it was added. Of the 60 top-up candidates, Claude (`claude-opus-5-5`) wrote the 20 citations in the main session, and four Claude subagents drafted the 40 number and entity rows under the same rules plus the reasons the review had rejected earlier rows: a figure the article gives more than one way, a claim the source does not state in so many words, disputed "first" credits, and context that makes any fake an obvious mismatch. Each top-up citation states only fields of its Crossref record (authors as recorded, journal, year, volume, pages), and its title has no punctuation other than a colon, since hyphenated titles rarely got a passing fake.
 
@@ -144,15 +144,15 @@ cd research/dataset_generation
 
 The result, with accuracy by type and the fitted coefficients, is written to `research/data/artifact_check_v1.json`.
 
-It runs once on all pairs and again with a separate model for each type, so a tell confined to one type cannot hide in the pool; it passes only if every interval includes 50%. Result on all 195 candidates with a passing fake, including the 49 top-up rows (on the first 146 it was 48.6% overall, with citations at 58.8%):
+It runs once on all pairs and again with a separate model for each type, so a tell confined to one type cannot hide in the pool; it passes only if every interval includes 50%. Result on all 214 candidates with a passing fake, including the 68 top-up rows (on the first 146 it was 48.6% overall, with citations at 58.8%):
 
 | | Pairs | Accuracy | 95% CI | |
 |---|---|---|---|---|
-| Overall | 195 | 50.3% | [43.3%, 57.2%] | pass |
+| Overall | 214 | 54.7% | [48.0%, 61.2%] | pass |
 | `wrong_number` | 52 | 50.0% | [36.9%, 63.1%] | pass |
 | `wrong_entity` | 55 | 41.8% | [29.7%, 55.0%] | pass |
 | `wrong_date` | 39 | 51.3% | [36.2%, 66.1%] | pass |
-| `invented_citation` | 49 | 57.1% | [43.3%, 70.0%] | pass |
+| `invented_citation` | 68 | 58.8% | [47.0%, 69.7%] | pass |
 
 An earlier citation run failed on its own (74%, then 71%): fake titles were shorter and dropped hyphens. The punctuation check, the 0.85 to 1.15 length bound, two asks per citation and closest-length selection removed the tell.
 
@@ -167,7 +167,7 @@ cd research/dataset_generation
 
 `flags` gathers everything worth a second look: `length_ratio_…` (the fake is much shorter or longer than the real span, a possible tell), the same for an alternate (`alt2:…`, `alt3:…`), `crossref_year_…` (the cited year is one off Crossref's), and `claim_wrong` or `claim_unverified` from the fact check below.
 
-`research/data/claims_v1.csv` is an advisory fact check of every other claim in each real answer (dates, co-authors, superlatives), since stage 1 verifies only `real_span`. Four Claude subagents (`claude-opus-5-5`, one per type) read the stage 1 revision of each cited article, the Crossref record for citations, and other English Wikipedia pages, and recorded `ok`, `wrong` (a source contradicts the claim) or `unverified`, with the claim and a short quote as evidence. Two more subagents checked the 60 top-up candidates the same way (all `ok`). Treat it as a pointer, not a verdict.
+`research/data/claims_v1.csv` is an advisory fact check of every other claim in each real answer (dates, co-authors, superlatives), since stage 1 verifies only `real_span`. Four Claude subagents (`claude-opus-5-5`, one per type) read the stage 1 revision of each cited article, the Crossref record for citations, and other English Wikipedia pages, and recorded `ok`, `wrong` (a source contradicts the claim) or `unverified`, with the claim and a short quote as evidence. Three more subagents checked the 80 top-up candidates the same way (all `ok`). Treat it as a pointer, not a verdict.
 
 Review rows flagged `wrong` or `unverified` were rewritten to fix the flagged claim using only facts confirmed in each row's own source (the cited Wikipedia article, or the Crossref record for citations), keeping `real_span` and the 25 to 60 word rule. `claims_v1.csv` logs each rewrite in `answer_real_before` and `answer_real_after`; their fakes were rebuilt with `make_fakes.py --rejudge` from the same logged replies, and a fresh fact check of the new answers is in `recheck_verdict`, `recheck_claim` and `recheck_evidence`. Flags follow the recheck when there is one.
 
