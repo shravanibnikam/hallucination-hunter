@@ -18,3 +18,5 @@ research/dataset_generation/models/
 Thumbs.db
 *.tsbuildinfo
 .local/
+AGENTS.md
+CLAUDE.md

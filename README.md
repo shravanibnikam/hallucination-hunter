@@ -8,7 +8,7 @@
 
 ## Screenshot
 
-Screenshot placeholder — add an image after the research dataset and deployment are ready.
+Screenshot placeholder — add an image after deployment.
 
 ## How it works
 
@@ -35,7 +35,7 @@ Coming soon. No study findings are claimed from the development samples.
 
 ## Dataset
 
-[Research dataset — coming soon](#dataset). The included [sample CSV](research/data/sample_pairs.csv) has six ordinary examples and two attention checks, all prefixed `[SAMPLE]` and versioned `sample-v1`. Each row names the `real_span` its fake replaces. The demonstration round has seven items: six ordinary facts plus one randomly selected check. Replace these examples before recruitment.
+The frozen v1 study dataset is [pairs_v1.csv](research/data/pairs_v1.csv): 84 rows, 80 pairs (20 per `hallucination_type`, each split 7, 7 and 6 across science, geography and history) plus 4 attention checks, all `dataset_version` `v1`. The [sample CSV](research/data/sample_pairs.csv) has six ordinary examples and two attention checks, all prefixed `[SAMPLE]` and versioned `sample-v1`; it is for local development and CI only, and its demonstration round has seven items. Each row names the `real_span` its fake replaces. The anonymized response data will be released with the findings.
 
 Dataset generation and analysis are owned by Shravani. The v1 dataset pipeline lives in [research/dataset_generation](research/dataset_generation/README.md); the analysis folder is still a placeholder.
 
@@ -85,6 +85,7 @@ set -a
 . ./.env.local
 set +a
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/202609280001_initial.sql
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/202610310001_prefreeze.sql
 research/.venv/bin/python research/import_pairs.py research/data/sample_pairs.csv --dry-run
 research/.venv/bin/python research/import_pairs.py research/data/sample_pairs.csv
 pnpm dev
@@ -150,10 +151,6 @@ docs/                   Decision log and deployment checklist
 ```
 
 See [deployment instructions](docs/deploy.md) for environment variables, production migrations, RLS verification, and restoring an inactive Supabase project. See [decisions](docs/decisions.md) for tradeoffs and limits.
-
-## How it was built
-
-Application built with Codex from a specification written by Shravani. Study design, dataset pipeline and analysis by Shravani.
 
 ## License
 

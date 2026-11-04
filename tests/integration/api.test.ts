@@ -264,3 +264,19 @@ test("rounds without an attention check cannot qualify for the leaderboard", asy
     await sql`update pairs set is_active=true where is_attention_check`;
   }
 });
+test("the category comparison appears once enough other study players finish", async () => {
+  type Row = { averageAccuracy: number | null };
+  const finish = async (extra: Record<string, unknown> = {}) => {
+    const s = await session("paired", extra);
+    for (let i = 1; i <= s.totalItems; i++)
+      expect((await answer(s, i)).status).toBe(200);
+    return (await (await complete(request({}), context(s.sessionId))).json()).accuracyPerCategory as Row[];
+  };
+  for (let n = 0; n < 19; n++)
+    await finish();
+  // A pilot round never counts toward the average.
+  await finish({ pilot: true });
+  // 19 other study players: still withheld, and a round never counts toward its own comparison.
+  expect((await finish()).every(c => c.averageAccuracy === null)).toBe(true);
+  expect((await finish()).every(c => c.averageAccuracy === 100)).toBe(true);
+});

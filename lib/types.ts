@@ -49,6 +49,8 @@ export interface CategoryAccuracy {
   correct: number;
   total: number;
   accuracy: number;
+  /** Other study players' accuracy in this category; null until enough have played. */
+  averageAccuracy: number | null;
 }
 export interface Summary {
   score: number;
@@ -59,6 +61,7 @@ export interface Summary {
   calibration: {
     statedProbability: number | null;
     actualAccuracy: number | null;
+    byConfidence: { confidence: number; correct: number; total: number }[];
     message: string;
   };
 }

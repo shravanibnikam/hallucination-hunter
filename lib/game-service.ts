@@ -7,8 +7,8 @@ import { db } from "./db";
 import { HttpError } from "./http";
 import { buildRound, type Exposure } from "./round-builder";
 import { isCorrect, scoreGuesses } from "./scoring";
-import { calibration } from "./calibration";
-import { TOO_FAST_MS } from "./constants";
+import { calibration, playerAverages, type CategoryTotals } from "./calibration";
+import { MIN_COMPARISON_PLAYERS, TOO_FAST_MS } from "./constants";
 import type { guessSchema, sessionSchema, profileSchema } from "./schemas";
 import type { Condition, PairCandidate, PublicItem, Side, Summary } from "./types";
 interface SessionRow {
@@ -127,11 +127,14 @@ export async function completeSession(id: string): Promise<Summary> {
     if (!s.completed)
       await tx`update sessions set completed=true, completed_at=now(), final_score=${score.score}, best_streak=${score.bestStreak}, failed_attention_check=${guesses.some(g => g.is_attention_check && !g.is_correct)} where id=${id}`;
     const regular = guesses.filter(g => !g.is_attention_check);
+    // Other completed study rounds that passed the attention check, without too-fast guesses or attention items.
+    // ponytail: full aggregate per completion; cache or keep a running total if the guesses table grows large.
+    const averages = playerAverages(await tx<CategoryTotals[]>`select p.category, (count(*) filter (where g.is_correct))::int as correct, count(*)::int as total, count(distinct s.id)::int as players from guesses g join sessions s on s.id=g.session_id join pairs p on p.id=g.pair_id where s.completed and s.is_study and not s.is_pilot and not s.failed_attention_check and not p.is_attention_check and not g.flagged_too_fast and s.id<>${id} group by p.category`, MIN_COMPARISON_PLAYERS);
     const categories = [...new Set(regular.map(g => g.category))].sort();
     const accuracyPerCategory = categories.map(category => {
       const items = regular.filter(g => g.category === category);
       const correct = items.filter(g => g.is_correct).length;
-      return { category, correct, total: items.length, accuracy: correct / items.length * 100 };
+      return { category, correct, total: items.length, accuracy: correct / items.length * 100, averageAccuracy: averages.get(category) ?? null };
 
     });
     return { score: score.score, total: s.total_items, bestStreak: score.bestStreak, accuracyPerCategory, averageConfidence: regular.length ? regular.reduce((sum, g) => sum + g.confidence, 0) / regular.length : null, calibration: calibration(guesses) };
