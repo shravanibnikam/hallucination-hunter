@@ -6,7 +6,7 @@ This is a manual pre-deploy checklist, not an automatic deployment script. Use S
 
 - [ ] Run lint, typecheck, unit tests, database integration tests, and both-condition Playwright tests as described in the README.
 - [ ] Replace the placeholder study contact on About and Privacy.
-- [ ] Replace `[SAMPLE]` facts with Shravani's validated study dataset; include an active attention check, stable UUIDs, exact fabricated and real spans, sources, origin, and dataset version.
+- [ ] Import the frozen v1 dataset, `research/data/pairs_v1.csv` (80 pairs and 4 attention checks). Never import the `[SAMPLE]` CSV into production.
 - [ ] Review the consent and publication wording for the intended study. Keep raw exports private; remove aliases and coarsen timestamps before sharing anonymized data.
 - [ ] Review `ROUND_LENGTH` and `TOO_FAST_MS` in `lib/constants.ts`. If round length is changed above 10, update the database constraints, schemas, and share bounds together. Bump the package version when behavior or study rules change.
 - [ ] Ensure `.env` files and `research/data/exports/` are absent from the Git index. Keep production credentials only in your local environment and Vercel's environment settings.
@@ -16,12 +16,13 @@ This is a manual pre-deploy checklist, not an automatic deployment script. Use S
 1. Create a Free project in your own Supabase account. Choose a database password and store it privately. Use the default project URL and features; no paid IPv4 add-on, custom domain, branching, or scheduled work is necessary.
 2. Open **Connect** in the project dashboard. For Vercel functions, copy the **transaction pooler** PostgreSQL URL (normally port 6543). Set a server-only `DATABASE_URL` with SSL enabled, such as the dashboard-provided URL with `sslmode=require`. URL-encode special characters in passwords. The driver disables prepared statements for transaction pooling and keeps at most three connections per process.
 3. For migrations and Python tools, use the dashboard's **session pooler** URL (normally port 5432) or a working direct connection, also with SSL. The session pooler provides IPv4 connectivity without a paid add-on. Keep this URL in your local `DATABASE_URL` for those commands; use the transaction URL in Vercel.
-4. Apply the SQL migration once to the fresh production database, through the Supabase SQL editor or locally:
+4. Apply both SQL migrations once, in filename order, to the fresh production database, through the Supabase SQL editor or locally:
 
 ```sh
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/202609280001_initial.sql
-research/.venv/bin/python research/import_pairs.py path/to/validated_pairs.csv --dry-run
-research/.venv/bin/python research/import_pairs.py path/to/validated_pairs.csv
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/202610310001_prefreeze.sql
+research/.venv/bin/python research/import_pairs.py research/data/pairs_v1.csv --dry-run
+research/.venv/bin/python research/import_pairs.py research/data/pairs_v1.csv
 ```
 
 Future migrations must be new files applied in order; never rewrite a migration already deployed. `202610310001_prefreeze.sql` deactivates every existing pair, because pairs from before `real_span` cannot be revised in place; import the dataset again (with new UUIDs for any pair a round has used) before playing. The sample CSV is suitable only for development or a clearly labeled pilot.
